@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موسوعة التاريخ الليبي الحديث والمعاصر - 100 سؤال واختبار تفاعلي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Almarai:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Almarai', sans-serif; }
+        body { background-color: #051329; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .main-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; background: #08162e; padding: 10px 20px; border-radius: 50px; border: 1px solid #d4af37; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 1000; align-items: center; }
+        .btn-ctrl { border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; color: #ffffff; transition: all 0.2s ease; }
+        .btn-nav { background: #1e3a8a; } 
+        .btn-pdf { background: #0284c7; } 
+        .btn-img { background: #10b981; } 
+        .btn-pen { background: #b45309; } 
+        .btn-pen.active { background: #d97706; border: 2px solid #fff; box-shadow: 0 0 10px #d97706; }
+        .btn-reset-ans { background: #d97706; }
+        .btn-delete-q { background: #dc2626; }
+        .btn-print-all { background: #d97706; color: #ffffff; }
+        .btn-save-file { background: #7c3aed; }
+
+        .pen-toolbar { display: none; gap: 12px; margin-bottom: 15px; background: #111d38; padding: 8px 22px; border-radius: 30px; border: 1.5px solid #10b981; align-items: center; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .color-dot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; display: inline-block; transition: 0.2s; }
+        .color-dot.selected { transform: scale(1.25); border-width: 3px; border-color: #ffd700; }
+        .pen-size-select { background: #051329; color: #fff; border: 1px solid #d4af37; padding: 4px 12px; border-radius: 10px; font-weight: bold; font-size: 13px; }
+        .btn-clear-canvas { background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-clear-canvas:hover { background: #dc2626; }
+
+        #quiz-app-wrapper { position: relative; width: 100%; max-width: 980px; }
+        
+        #quiz-app { width: 100%; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6); border: 4px solid #081d3d; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        #drawCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 500; touch-action: none; border-radius: 24px; }
+        #drawCanvas.drawing-active { 
+            pointer-events: auto; 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="%23ffd700" stroke="%23051329" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>') 2 32, crosshair; 
+        }
+
+        .top-header {
+            background: linear-gradient(180deg, #071c3d 0%, #0d2859 100%);
+            padding: 18px 30px;
+            color: #ffffff;
+            border-bottom: 4px solid #00a8e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-center { text-align: center; flex-grow: 1; }
+        .main-title { font-size: 20px; font-weight: 900; color: #ffffff; line-height: 1.2; }
+        .sub-title { color: #00b4d8; font-size: 13px; font-weight: 700; margin-top: 3px; }
+        .author-name { color: #ffffff; font-size: 14px; font-weight: 800; margin-top: 4px; }
+        .header-icon-circle { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #5279a4; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+        .progress-bar-container { background: #e2e8f0; height: 6px; width: 100%; }
+        .progress-bar { background: #10b981; height: 100%; width: 1%; transition: width 0.2s ease; }
+
+        .status-row { display: flex; justify-content: space-between; padding: 12px 40px 0 40px; font-size: 15px; font-weight: 900; color: #0d2859; }
+
+        .card-body { padding: 20px 40px 30px 40px; flex-grow: 1; display: flex; flex-direction: column; gap: 16px; justify-content: center; }
+
+        .main-question-card { border: 2.5px solid #0d2859; border-radius: 18px; padding: 18px 24px; background: #ffffff; box-shadow: 0 4px 15px rgba(13, 40, 89, 0.04); }
+        .question-header-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .q-right-group { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .badge-q-tag { background: #0a214d; color: #ffffff; padding: 7px 18px; border-radius: 10px; font-size: 17px; font-weight: 800; white-space: nowrap; }
+        .q-text-content { font-size: 18px; font-weight: 800; color: #0f172a; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .opt-btn { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s ease; text-align: right; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .opt-btn:hover:not([disabled]) { border-color: #0284c7; background: #f0f9ff; transform: translateY(-2px); }
+        .opt-letter { width: 32px; height: 32px; background: #e2e8f0; color: #0f2c59; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; flex-shrink: 0; margin-right: 12px; }
+        .opt-text { font-size: 15px; font-weight: 800; color: #1e293b; flex-grow: 1; }
+
+        .opt-btn.correct { background: #ecfdf5 !important; border-color: #10b981 !important; }
+        .opt-btn.correct .opt-letter { background: #10b981 !important; color: #ffffff !important; }
+        .opt-btn.wrong { background: #fef2f2 !important; border-color: #ef4444 !important; }
+        .opt-btn.wrong .opt-letter { background: #ef4444 !important; color: #ffffff !important; }
+
+        .check-mark {
+            font-size: 20px;
+            font-weight: 900;
+            color: #10b981;
+            margin-right: auto;
+            margin-left: 10px;
+            background: #d1fae5;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid #10b981;
+        }
+
+        #result-screen { display: none; text-align: center; padding: 40px 20px; }
+        .result-score { font-size: 48px; font-weight: 900; color: #10b981; margin: 15px 0; }
+        .btn-restart { background: #0f2c59; color: #ffffff; border: none; padding: 12px 35px; border-radius: 25px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 20px; }
+
+        .bottom-footer {
+            background: linear-gradient(180deg, #071c3d 0%, #0d2859 100%);
+            border-top: 4px solid #00a8e8;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+        }
+
+        .footer-sec { display: flex; align-items: center; gap: 10px; }
+        .footer-sec-center { text-align: center; }
+        .footer-icon-circle { width: 40px; height: 40px; background: rgba(0, 180, 216, 0.12); border: 1.5px solid #00a8e8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #00b4d8; }
+        .footer-meta { display: flex; flex-direction: column; }
+        .footer-text-title { font-size: 11px; color: #90e0ef; font-weight: 700; }
+        .footer-text-val { font-size: 14px; font-weight: 900; direction: ltr; color: #caf0f8; letter-spacing: 0.5px; }
+        .footer-author-main { font-size: 17px; font-weight: 900; color: #ffffff; }
+
+        @media print {
+            body { background: none; padding: 0; }
+            .main-controls, .pen-toolbar, .progress-bar-container, .status-row, #drawCanvas { display: none !important; }
+            #quiz-app { box-shadow: none; border: 2px solid #081d3d; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-controls">
+        <button class="btn-ctrl btn-nav" id="btn-prev" onclick="prevQ()">➔ السابق</button>
+        <button class="btn-ctrl btn-pen" id="penToggleBtn" onclick="togglePen()">✏️ قلم الشرح الحقيقي</button>
+        <button class="btn-ctrl btn-nav" id="btn-next" onclick="nextQ()">التالي ⬅</button>
+        <div style="width:1px; height:20px; background:#d4af37;"></div>
+        <button class="btn-ctrl btn-pdf" onclick="window.print()">📄 طباعة السؤال الحالي PDF</button>
+        <button class="btn-ctrl btn-print-all" onclick="printAllQuestionsPDF()">🖨️ تصدير الكل PDF</button>
+        <button class="btn-ctrl btn-img" onclick="exportImage()">🖼️ تصدير صورة مميزة الإجابة PNG</button>
+        <button class="btn-ctrl btn-save-file" onclick="saveModifiedFile()">💾 حفظ التعديلات في ملف</button>
+        <button class="btn-ctrl btn-reset-ans" onclick="resetCurrentAnswer()">🔄 مسح الإجابة</button>
+        <button class="btn-ctrl btn-delete-q" onclick="deleteCurrentQuestion()">❌ حذف السؤال</button>
+    </div>
+
+    <div class="pen-toolbar" id="penToolbar">
+        <span style="color:#d4af37; font-weight:bold; font-size:13px;">الألوان:</span>
+        <span class="color-dot selected" style="background: #e11d48;" onclick="setPenColor('#e11d48', this)" title="أحمر"></span>
+        <span class="color-dot" style="background: #2563eb;" onclick="setPenColor('#2563eb', this)" title="أزرق"></span>
+        <span class="color-dot" style="background: #16a34a;" onclick="setPenColor('#16a34a', this)" title="أخضر"></span>
+        <span class="color-dot" style="background: #ffd700;" onclick="setPenColor('#ffd700', this)" title="ذهبي"></span>
+        <span class="color-dot" style="background: #ffffff;" onclick="setPenColor('#ffffff', this)" title="أبيض"></span>
+
+        <span style="color:#d4af37; font-weight:bold; font-size:13px; margin-right:5px;">السماكة:</span>
+        <select class="pen-size-select" id="penSizeSelect" onchange="setPenSize(this.value)">
+            <option value="1.5">خط رفيع دقيق</option>
+            <option value="2.5" selected>قلم حقيقي مثالي</option>
+            <option value="5">قلم كتابة واضح</option>
+            <option value="12">قلم تظليل عريض</option>
+        </select>
+
+        <button class="btn-clear-canvas" onclick="clearCanvas()">🗑️ مسح الخطوط</button>
+    </div>
+
+    <div id="quiz-app-wrapper">
+        <canvas id="drawCanvas" width="980" height="561"></canvas>
+        <div id="quiz-app">
+            <div class="top-header">
+                <div class="header-icon-circle">⭐</div>
+                <div class="header-center">
+                    <div class="main-title">موسوعة التاريخ الليبي الحديث والمعاصر (<span id="total-q-badge">100</span> سؤال)</div>
+                    <div class="sub-title">من العهد العثماني الأول وحتى الاستقلال والجمهورية</div>
+                    <div class="author-name">إبراهيم أبوزيد | معلّم ومدرب وباحث</div>
+                </div>
+                <div class="header-icon-circle">📜</div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 1%;"></div>
+            </div>
+
+            <div id="quiz-screen">
+                <div class="status-row">
+                    <span id="question-count">السؤال 1 من 100</span>
+                    <span id="score-count">النقاط: 0</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="main-question-card">
+                        <div class="question-header-row">
+                            <div class="q-right-group">
+                                <div class="badge-q-tag" id="q-badge">السؤال 1</div>
+                                <div class="q-text-content" id="q-text">جاري تحميل الأسئلة...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="options-grid" id="options-container"></div>
+                </div>
+            </div>
+
+            <div id="result-screen">
+                <h2 style="font-size: 28px; color: #0f2c59; font-weight: 900;">اكتمل اختبار التاريخ الليبي بنجاح!</h2>
+                <div class="result-score" id="final-score">0 / 100</div>
+                <p id="result-message" style="font-size: 18px; font-weight: 700; color: #475569;"></p>
+                <button class="btn-restart" onclick="restartQuiz()">إعادة الاختبار 🔄</button>
+            </div>
+
+            <div class="bottom-footer">
+                <div class="footer-sec" style="direction: ltr;">
+                    <div class="header-icon-circle" style="width:40px; height:40px; font-size:18px;">✈</div>
+                    <div class="footer-meta" style="text-align: left;">
+                        <span class="footer-text-title">حساب تليجرام</span>
+                        <span class="footer-text-val">t.me/myibhistoricy</span>
+                    </div>
+                </div>
+
+                <div class="footer-sec-center">
+                    <div class="footer-author-main">إبراهيم أبوزيد</div>
+                </div>
+
+                <div class="footer-sec">
+                    <div class="footer-meta" style="text-align: right;">
+                        <span class="footer-text-title">رقم الهاتف</span>
+                        <span class="footer-text-val">966 55 783 1353</span>
+                    </div>
+                    <div class="header-icon-circle" style="width:40px; height:40px; font-size:18px;">📞</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var rawCardsData = [
+            {
+                "q": "في أي سنة تمكنت الدولة العثمانية بقيادة السلطان سليمان القانوني من طرد فرسان القديس يوحنا (مالطا) وضم طرابلس تحت حكمها؟",
+                "options": ["1551 م", "1510 م", "1711 م", "1835 م"],
+                "correct": 0
+            },
+            {
+                "q": "من هو مؤسس الأسرة القره مانلية التي حكمت طرابلس الغرب باستقلال ذاتي نسبي عن الباب العالي ابتداءً من سنة 1711م؟",
+                "options": ["أحمد باشا القره مانلي", "يوسف باشا القره مانلي", "علي باشا القره مانلي", "محمد باشا الساقزلي"],
+                "correct": 0
+            },
+            {
+                "q": "من هو أشهر حكام الأسرة القره مانلية والذي شهد عهده ذروة القوة البحرية لطرابلس والحروب مع الولايات المتحدة الأمريكية (الحرب البربرية الأولى)؟",
+                "options": ["يوسف باشا القره مانلي", "أحمد باشا القره مانلي", "علي باشا", "محمد باشا"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المعاهدة التي وقعتها الولايات المتحدة الأمريكية مع طرابلس سنة 1805م بعد الحرب البحرية والمعارك الشهيرة في درنة؟",
+                "options": ["معاهدة السلام والصداقة (معاهدة ليرد)", "معاهدة باريس", "معاهدة وستفاليا", "معاهدة طرابلس الكبرى"],
+                "correct": 0
+            },
+            {
+                "q": "في أي سنة انتهى حكم الأسرة القره مانلية وعادت ليبيا للسيطرة المباشرة للإدارة العثمانية (العهد العثماني الثاني)؟",
+                "options": ["1835 م", "1711 م", "1911 م", "1881 م"],
+                "correct": 0
+            },
+            {
+                "q": "من هو مؤسس الحركة السنوسية الإصلاحية والصوفية في العالم الإسلامي وشمال إفريقيا؟",
+                "options": ["السيد محمد بن علي السنوسي (المهدي الكبير)", "السيد أحمد الشريف", "السيد إدريس السنوسي", "عمر المختار"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المدينة التي اتخذها السيد محمد بن علي السنوسي مقراً أولاً للحركة السنوسية وأنشأ فيها زاويته الشهيرة (البيضاء)؟",
+                "options": ["الجبل الأخضر (البيضاء/أبو مراعي)", "بنغازي", "طرابلس", "مرزق"],
+                "correct": 0
+            },
+            {
+                "q": "في أي سنة أعلنت إيطاليا الحرب على الدولة العثمانية وبدأت الغزو والغارات العسكرية على السواحل الليبية؟",
+                "options": ["29 سبتمبر 1911 م", "1912 م", "1923 م", "1931 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المعركة الشهيرة التي خاضتها المقاومة الليبية والقوات العثمانية ضد الغزو الإيطالي وحقق فيها المجاهدون نصراً باهراً (تشرين الأول 1911)؟",
+                "options": ["معركة الهاني ومعركة طرابلس الكبرى", "معركة القرضابية", "معركة الرحيبات", "معركة بير بلال"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المعركة الفاصلة في يونيو 1915 والتي ألحقت فيها القبائل الليبية هزيمة ساحقة بقوات الاحتلال الإيطالي في سرت؟",
+                "options": ["معركة القرضابية", "معركة السواني", "معركة العجيلات", "معركة جالو"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الاتفاق الذي وقعته إيطاليا مع زعماء برقة سنة 1917م ومنح بموجبه استقلالاً ذاتياً لبرقة؟",
+                "options": ["اتفاقية أكلومة (صالح الفاخري)", "معاهدة لوزان", "اتفاقية أوشي", "معاهدة لندن"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو المؤتمر الوطني الذي عقده الزعماء الليبيون في غريان سنة 1920 لتوحيد صفوف المقاومة وإعلان الجمهورية الطرابلسية؟",
+                "options": ["مؤتمر غريان", "مؤتمر سرت", "مؤتمر إزلاف", "مؤتمر بنغازي"],
+                "correct": 0
+            },
+            {
+                "q": "من هو شيخ المجاهدين وبطل المقاومة الليبية الذي قاد جهاد برقة طيلة عقود وتم إعدامه سنة 1931؟",
+                "options": ["عمر المختار", "أحمد الشريف", "الفضيل بوبرويص", "عبد النبي بالخير"],
+                "correct": 0
+            },
+            {
+                "q": "في أي تاريخ تم إعدام شيخ المجاهدين عمر المختار شنقاً في معتقل سلوق؟",
+                "options": ["16 سبتمبر 1931 م", "10 أكتوبر 1931 م", "20 مارس 1923 م", "15 أغسطس 1935 م"],
+                "correct": 0
+            },
+            {
+                "q": "من هو القائد الإيطالي الفاشي الذي تولى حكم ليبيا وقاد حملات إبادة وحشية وبناء أسلاك شائكة لعزل المجاهدين عن مصر؟",
+                "options": ["رودولفو غراتسياني", "بيترو بادوليو", "إيتالو بالبو", "بينيتو موسوليني"],
+                "correct": 0
+            },
+            {
+                "q": "من هو المارشال الإيطالي الذي استخدم الغازات السامة وسياسة الاعتقالات الجماعية (معتقلات البريقة وغيرها) لإخضاع برقة؟",
+                "options": ["بيترو بادوليو", "رودولفو غراتسياني", "إيتالو بالبو", "كافور"],
+                "correct": 0
+            },
+            {
+                "q": "من هو الحاكم الإيطالي العام لليبيا في الثلاثينيات والذي عُرف بمشاريع توطين الفلاحين الطليان وإنشاء مطار طرابلس وتوفي في حادث تحطم طائرة؟",
+                "options": ["إيتالو بالبو", "رودولفو غراتسياني", "بيترو بادوليو", "غالياتسو تشيانو"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الاسم التاريخي لمعتقلات الإبادة الجماعية التي جمع فيها الاحتلال الإيطالي أهالي وسكان البادية في برقة؟",
+                "options": ["معتقلات العقيلة وسلوق ومقادم", "معسكرات الأسرى العسكرية", "محتشدات فزان", "مراكز العمل الإجباري"],
+                "correct": 0
+            },
+            {
+                "q": "في أي سنة تأسست 'قوات الجيوش الليبية' (الجيش السنوسي) في مصر للمشاركة مع الحلفاء في تحرير ليبيا من الأكسيس؟",
+                "options": ["1940 م", "1939 م", "1942 م", "1945 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المعارك الكبرى التي دارت على الأراضي الليبية بين قوات الحلفاء (بريطانيا) وقوات المحور (ألمانيا وإيطاليا) في الحرب العالمية الثانية؟",
+                "options": ["معارك العلمين وطبرق وبنغازي", "معركة العلمين المصرية وحدود ليبيا", "حملة الصحراء الغربية", "معركة طبرق والغازية"],
+                "correct": 0
+            },
+            {
+                "q": "من هو القائد الألماني الشهير (ثعلب الصحراء) الذي قاد قوات الفيلق الأفريقي في ليبيا خلال الحرب العالمية الثانية؟",
+                "options": ["إيرفين رومل", "هاينز جوديريان", "فالدر موديل", "كارل دونيتز"],
+                "correct": 0
+            },
+            {
+                "q": "بعد هزيمة إيطاليا في الحرب العالمية الثانية، ما هي الدولتان اللتان تقاسمتا الإدارة العسكرية لليبيا بين (1943 - 1951)؟",
+                "options": ["بريطانيا (برقة وطرابلس) وفرنسا (فزان)", "بريطانيا وفرنسا مناصفة", "أمريكا وبريطانيا", "مصر وبريطانيا"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الاسم الذي أطلق على محاولة فرنسا فصل إقليم فزان وضمه إلى مستعمراتها في إفريقيا بعد الحرب الثانية؟",
+                "options": ["إدارة فزان العسكرية الفرنسية", "مشروع فزان الفرنسي", "اتفاقية الصحراء الكبرى", "ميثاق فزان والتشاد"],
+                "correct": 0
+            },
+            {
+                "q": "من هو الزعيم الوطني الليبي الذي ترأس هيئة تحرير ليبيا وقاد النضال السياسي والدبلوماسي للاستقلال؟",
+                "options": ["السيد محمد إدريس المهدي السنوسي", "بشير السعداوي", "مصطفى الفاتح كرتار", "عمر المختار"],
+                "correct": 0
+            },
+            {
+                "q": "من هو زعيم المؤتمر الوطني ورئيس حزب الكتلة الوطنية الذي قاد العمل السياسي في طرابلس للمطالبة بالاستقلال والوحدة؟",
+                "options": ["الشيخ بشير السعداوي", "محمود المنتصر", "علي العتريق", "محمد بن عثمان"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي هيئة الأمم المتحدة التي أصدرت القرار الشهير رقم 289 في نوفمبر 1949 والقاضي بمنح ليبيا استقلالها في موعد لا يتجاوز 1 يناير 1952؟",
+                "options": ["الجمعية العامة للأمم المتحدة", "مجلس الأمن الدولي", "مفوضية شؤون المستعمرات", "محكمة العدل الدولية"],
+                "correct": 0
+            },
+            {
+                "q": "من هو المندوب السامي للأمم المتحدة في ليبيا والذي أشرف على تأسيس الدولة الليبية الموحدة وتمهيد الاستقلال؟",
+                "options": ["أدريان بلت (Adriaan Pelt)", "ralph bunche", "لويس مولين", "جان موني"],
+                "correct": 0
+            },
+            {
+                "q": "في أي تاريخ أعلن رسمياً استقلال المملكة الليبية المتحدة كدولة اتحادية ملكية؟",
+                "options": ["24 ديسمبر 1951 م", "1 سبتمبر 1969 م", "17 فبراير 2011 م", "18 أكتوبر 1949 م"],
+                "correct": 0
+            },
+            {
+                "q": "من هو أول ملك لدولة ليبيا المستقلة بعد إعلان الاستقلال سنة 1951؟",
+                "options": ["الملك إدريس الأول (محمد إدريس السنوسي)", "الملك حسن الرضا", "الملك محمد بن عثمان", "الملك أحمد السنوسي"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو أول رئيس وزراء للحكومة الاتحادية الليبية المستقلة (1951)؟",
+                "options": ["محمود المنتصر", "مصطفى بن حليم", "عبد المجيد كعوب", "محيي الدين فكيني"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي القاعدة العسكرية الأمريكية الكبرى التي أُنشئت في طرابلس (بمنطقة عقبة بن نافع) وأثارت جدلاً واسعاً في الخمسينيات والستينيات؟",
+                "options": ["قاعدة ويلز الجوية (Wheelus Air Base)", "قاعدة الماية", "قاعدة طرابلس الكبرى", "قاعدة طبرق الجوية"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو التعديل الدستوري الهام الذي أُجري في ليبيا سنة 1963 وألغى النظام الاتحادي (الفيدرالي) وحولها إلى دولة ملكية مركزية موحدة؟",
+                "options": ["إلغاء النظام الفيدرالي والتحول إلى نظام محافظات (1963)", "دستور بنغازي الاتحادي", "دستور 1951 المعدل", "قانون الطوارئ الملكي"],
+                "correct": 0
+            },
+            {
+                "q": "في أي سنة اكتُشف النفط بكميات تجارية ضخمة في ليبيا (حقل زلطن وغيره)؟",
+                "options": ["1959 م", "1951 م", "1969 م", "1973 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الانقلاب العسكري الذي قاده الضباط الوحدويون الأحرار وأطاح بالنظام الملكي في ليبيا؟",
+                "options": ["ثورة الفاتح من سبتمبر 1969", "انقلاب 24 ديسمبر", "حركة الضباط الأحرار الليبية", "انقلاب الجيش الاتحادي"],
+                "correct": 0
+            },
+            {
+                "q": "من هو قائد حركة الضباط الأحرار ورئيس مجلس قيادة الثورة الذي حكم ليبيا لأكثر من أربعة عقود (1969 - 2011)؟",
+                "options": ["العقيد معمر القذافي", "عبد السلام جلود", "مصطفى الخروبي", "خُويلدي الحميدي"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الشعار السياسي والنظري الذي طرحه معمر القذافي واعتبره بديلاً عن الرأسمالية والاشتراكية التقليدية؟",
+                "options": ["النظرية العالمية الثالثة (الكتاب الأخضر)", "الاشتراكية العربية الموحدة", "الجمهورية الاشتراكية الكبرى", "الفلسفة الجماهيرية"],
+                "correct": 0
+            },
+            {
+                "q": "في أي سنة أُعلن رسمياً قيام 'الجماهيرية العربية الليبية الشعبية الاشتراكية' وإلغاء اسم الجمهورية العربية الليبية؟",
+                "options": ["1977 م (إعلان إقامة سلطة الشعب)", "1969 م", "1973 م", "1986 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو القرار التاريخي الشجاع الذي اتخذته حكومة الثورة سنة 1970 وأدى إلى إخلاء القواعد العسكرية الأجنبية؟",
+                "options": ["إجلاء القواعد البريطانية والأمريكية (قاعدة ويلز وباتيل)", "تأميم النفط بالكامل", "إلغاء الاتفاقيات العسكرية", "إغلاق المجال الجوي"],
+                "correct": 0
+            },
+            {
+                "q": "متى تم تأميم قطاع النفط والشركات الأجنبية المنتجة للبترول في ليبيا؟",
+                "options": ["أوائل السبعينيات (1970 - 1973)", "1969 م", "1977 م", "1980 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي الحرب الحدودية التي خاضتها ليبيا ضد مصر في يوليو 1977؟",
+                "options": ["حرب الأيام الأربعة (الحرب المصرية الليبية)", "حرب الحدود الغربية", "معركة السلوم", "حرب الصحراء الكبرى"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو النزاع العسكري الطويل الذي خاضته ليبيا في دولة تشاد المجاورة خلال السبعينيات والثمانينيات؟",
+                "options": ["النزاع الليبي التشادي (حرب شتاد وقطاع أوزو)", "حرب الساحل الإفريقي", "غزو تشاد", "معركة فزان التشادية"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو قطاع الأراضي الحدودية الغنية باليورانيوم والمعادن الذي كان محط نزاع بين ليبيا وتشاد وحكمت محكمة العدل الدولية لصالح تشاد سنة 1994؟",
+                "options": ["قطاع أوزو", "منطقة فزان الكبرى", "واحة الكفرة", "إقليم برقة الجنوبي"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو القصف الجوي الأمريكي العنيف الذي تعرضت له مدينتا طرابلس وبنغازي سنة 1986 رعايةً لاتهامات أمريكية بتفجير ملهى ليلي في برلين؟",
+                "options": ["عملية إلدورادو كانيون (قصف 1986)", "عملية عاصفة الصحراء", "غارة سرت البحرية", "القصف الاستراتيجي"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي الأزمة الدولية الكبرى التي اندلعت إثر تفجير طائرة بان أمريكان فوق قرية لوكربي الاسكتلندية سنة 1988 واتهام ليبيا بالمسؤولية؟",
+                "options": ["أزمة لوكربي والعقوبات الدولية على ليبيا", "أزمة الحصار النفطي", "حرب المقاطعة الدبلوماسية", "أزمة الطيران الدولي"],
+                "correct": 0
+            },
+            {
+                "q": "في أي سنة تم تعليق ثم رفع العقوبات الدولية ومجلس الأمن عن ليبيا بعد تسليم المتهمين في قضية لوكربي ودفع التعويضات؟",
+                "options": ["2003 م (رفع العقوبات وإعلان التخلي عن أسلحة الدمار)", "1999 م", "2011 م", "1992 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو المشروع الهيدروليكي الهائل الذي أُنشئ في ليبيا لنقل المياه الجوفية من الصحراء الكبرى إلى المدن الساحلية (النهر الصناعي العظيم)؟",
+                "options": ["مشروع النهر الصناعي العظيم", "قناة الصحراء الكبرى", "مشروع النيل الليبي", "سد المياه الجوفية"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو التاريخ الذي اندلعت فيه الاحتجاجات والانتفاضة الشعبية في بنغازي ومدن ليبية أخرى والتي أطاحت بنظام القذافي؟",
+                "options": ["17 فبراير 2011 م", "15 مارس 2011 م", "24 ديسمبر 2010 م", "1 سبتمبر 2011 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الحلف العسكري الدولي الذي تدخل في ليبيا سنة 2011 بقرار مجلس الأمن 1973 لحماية المدنيين؟",
+                "options": ["حلف الناتو (NATO)", "التحالف الدولي العربي", "قوات حفظ السلام الأممية", "الاتحاد الأوروبي العسكري"],
+                "correct": 0
+            },
+            {
+                "q": "من هو رئيس المجلس الوطني الانتقالي الذي قاد إدارة مرحلة التحرير والانتقال السياسي في ليبيا بعد أحداث 2011؟",
+                "options": ["المستشار مصطفى عبد الجليل", "محمود جبريل", "عبد الرحيم الكيب", "علي زيدان"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو اسم أول مؤتمر وطني عام تم انتخابه ديمقراطياً في ليبيا بعد ثورة فبراير لتولى السلطة التشريعية سنة 2012؟",
+                "options": ["المؤتمر الوطني العام", "مجلس النواب الليبي", "البرلمان الاتحادي", "مجلس الشعب التأسيسي"],
+                "correct": 0
+            },
+            {
+                "q": "في أي سنة أُجريت الانتخابات البرلمانية التي أسست لمجلس النواب الليبي ومقره طبرق وبدأت بعدها الانقسامات المؤسسية؟",
+                "options": ["2014 م", "2012 م", "2015 م", "2020 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الاتفاق السياسي التاريخي الذي رُعِي أممياً وتم توقيعه في المغرب بديسمبر 2015 لتوحيد المؤسسات وتشكيل حكومة الوفاق الوطني؟",
+                "options": ["اتفاق الصخيرات السياسي", "اتفاق جنيف", "اتفاق برلين", "إعلان القاهرة"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو اسم ملتقى الحوار السياسي الليبي الذي عُقد برعاية الأمم المتحدة في جنيف سويسرا مطلع 2021 وأفرز السلطة التنفيذية الموحدة المؤقتة؟",
+                "options": ["ملتقى الحوار السياسي الليبي (حكومة الوحدة الوطنية)", "مؤتمر باريس للسلام", "قمة روما للمصالحة", "حوار تونس التأسيسي"],
+                "correct": 0
+            },
+            {
+                "q": "من هو رئيس حكومة الوحدة الوطنية التي تشكلت في أوائل سنة 2021 لتوحيد مؤسسات الدولة والتحضير للانتخابات؟",
+                "options": ["عبد الحميد الدبيبة", "فتحية باشاغا", "أسامة حماد", "فايز السراج"],
+                "correct": 0
+            },
+            {
+                "q": "من هو المبعوث الأممي الحالي أو أبرز المبعوثين الذين قادوا البعثة الأممية للدعم في ليبيا (UNSMIL) خلال السنوات الأخيرة؟",
+                "options": ["عبد الله باتيلي (وباربارا شتاين وآخرين)", "برناردينو ليون", "غسان سلامة", "جان كوبيش"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المدينة الليبية التاريخية الواقعة في أقصى الغرب على الحدود التونسية وتشكل منفذاً تجارياً واستراتيجياً رئيسياً؟",
+                "options": ["رأس اجدير / زوارة", "طبرق", "مسلاتة", "نالوت"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المدينة الليبية الواقعة في أقصى الشرق وتُعتبر البوابة الحدودية البرية مع مصر؟",
+                "options": ["امساعد", "سوسة", "درنة", "المرج"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي العاصمة التاريخية والسياسية والاقتصادية لدولة ليبيا؟",
+                "options": ["طرابلس", "بنغازي", "سرت", "سبها"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي عاصمة إقليم برقة الكبرى وأكبر مدن الشرق الليبي؟",
+                "options": ["بنغازي", "طبرق", "البيضاء", "اجدابيا"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي العاصمة التاريخية لإقليم فزان في الجنوب الليبي؟",
+                "options": ["سبها", "مرزق", "غات", "أوباري"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الجبل الشهير في الغرب الليبي الذي لعب دوراً بطولياً كبيراً في مقاومة الاحتلال الإيطالي (ثورة الجبل الغربي)؟",
+                "options": ["جبل نفوسة (الجبل الغربي)", "الجبل الأخضر", "جبل العوينات", "تدرت أكاكوس"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الجبل الشهير في شرق ليبيا الذي شهد أشرس معارك الجهاد بقيادة عمر المختار؟",
+                "options": ["الجبل الأخضر", "جبل نفوسة", "جبل غريان", "مرتفعات طبرق"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الاسم التاريخي لمنطقة فزان وجنوب ليبيا قديماً في العصور الإسلامية والعثمانية؟",
+                "options": ["بلاد فزان (طريق القوافل والصحراء الكبرى)", "إقليم الجنوب الكبير", "ولاية مرزق", "إمارة الصحراء"],
+                "correct": 0
+            },
+            {
+                "q": "من هو الشاعر الليبي الكبير الذي عُرف بشاعر الوطن ومؤلف النشيد الوطني الليبي السابق والعديد من القصائد الوطنية؟",
+                "options": ["أحمد رفيق المهدوي", "خليفة الفاخري", "إبراهيم الحصادي", "رجب الماجري"],
+                "correct": 0
+            },
+            {
+                "q": "من هو العالم والمؤرخ الليبي البارز مؤلف كتاب 'سكان ليبيا' و'تاريخ طرابلس الغرب'؟",
+                "options": ["الشيخ الطاهر أحمد الزاوي", "محمد زكاء الله", "أحمد بك النائب", "محمد مسعود الرفادي"],
+                "correct": 0
+            },
+            {
+                "q": "من هو المؤرخ والرحالة العثماني الطرابلسي مؤلف كتاب 'المنهل العذب في تاريخ طرابلس الغرب'؟",
+                "options": ["أحمد بك النائب الأنصاري", "الطاهر الزاوي", "محمود الناجي", "علي صبري"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو أول دستور مؤقت أصدرته ليبيا بعد استقلالها سنة 1951؟",
+                "options": ["دستور المملكة الليبية المتحدة (1951)", "دستور الجمهورية العربية", "الإعلان الدستوري المؤقت", "قانون النظام الأساسي"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الاسم الرسمي لليبيا في عهد المملكة الليبية (1951 - 1969)؟",
+                "options": ["المملكة الليبية المتحدة (ثم المملكة الليبية سنة 1963)", "الجمهورية الليبية الاتحادية", "الجماهيرية الليبية", "السلطنة الطرابلسية"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الشعار الوطني (النشيد الوطني) الحالي لليبيا المستقلة والذي عاد اعتماده بعد 2011؟",
+                "options": ["نشيد ليبيا يا بلادي", "والله زمان يا سلاحي", "بلادي بلادي", "فاليعش الوطن"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو العلم الوطني الذي اعتمدته ليبيا عند الاستقلال سنة 1951 وعاد ليكون العلم الرسمي للبلاد بعد 2011؟",
+                "options": ["العلم ذو الألوان الثلاثة (الأحمر والأسود والأخضر مع الهلال والنجمة)", "العلم الأخضر السادة", "الععلم ذو النجوم الثلاث", "علم الجمهورية العربية المتحدة"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المعاهدة التي أبرمتها إيطاليا والدولة العثمانية سنة 1912 وتنازلت بموجبها تركيا عن ليبيا لإيطاليا (معاهدة لوزان الأولى أو أوشي)؟",
+                "options": ["معاهدة أوشي (لوزان 1912)", "معاهدة باريس", "معاهدة لندن الكبرى", "اتفاقية روما"],
+                "correct": 0
+            },
+            {
+                "q": "من هو القائد الميداني المجاهد الذي قاد معارك شرسة في جنوب ليبيا وفزان ضد الاحتلال الفرنسي والإيطالي؟",
+                "options": ["أحمد الشريف السنوسي / عبد النبي بالخير", "عمر المختار", "الفضيل بوبرويص", "يوسف بورحيل"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي الواحة الصحراوية الكبرى في جنوب شرق ليبيا والتي كانت معقلاً رئيسياً للمقاومة السنوسية وربطت ليبيا بالسودان ومصر؟",
+                "options": ["واحة الكفرة", "واحة الجغبوب", "واحة جالو", "واحة أوجلة"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي الواحة التاريخية والمدينة العلمية في شرق ليبيا التي ضمت الحوزة العلمية والمكتبة السنوسية الكبرى ودفن فيها مؤسس الحركة؟",
+                "options": ["الجغبوب", "الكفرة", "تاجوراء", "مسلاتة"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو اسم الصحراء الواسعة التي تشغل الجزء الأكبر من مساحة ليبيا؟",
+                "options": ["الصحراء الكبرى (الصحراء الليبية)", "صحراء الربع الخالي", "صحراء سيناء", "الصحراء الشرقية"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو النزاع التاريخي البحري الذي خاضته طرابلس في أواخر القرن الثامن عشر ضد الدول الأوروبية وأمريكا بسبب حماية التجارة في المتوسط؟",
+                "options": ["حروب القراصنة والجهاد البحري (الولايات البحرية)", "معارك الأسطول العثماني", "حرب البندقية الكبرى", "معركة ليبيا الكبرى"],
+                "correct": 0
+            },
+            {
+                "q": "من هو الوالي العثماني الشهير الذي اشتهر بالقضاء على عصيان القبائل وتثبيت أركان الحكم العثماني في طرابلس خلال القرن السابع عشر؟",
+                "options": ["محمد باشا الساقزلي", "عثمان باشا", "مراد آغا", "سنان باشا"],
+                "correct": 0
+            },
+            {
+                "q": "من هو القائد العثماني المجاهد الذي فتح طرابلس أول مرة سنة 1551م بمعية سنان باشا ودمشقلي مصطفى باشا؟",
+                "options": ["مراد آغا", "طغرل بي", "خير الدين بارباروس", "عروج ريس"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو اسم المعلم التاريخي والجهادي البارز في منطقة تاجوراء والذي بُني تخليداً لجهاد القائد مراد آغا؟",
+                "options": ["مسجد مراد آغا", "قلعة طرابلس", "قصر أحمد", "سرايا الحكم"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي القلعة الحصينة والمركز الإداري والتاريخي وسط مدينة طرابلس والتي تضم متاحف ليبيا الكبرى؟",
+                "options": ["السرايا الحمراء (قلعة طرابلس)", "قلعة بنغازي", "حصن درنة", "قلعة سبها"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المدينة الساحلية الواقعة بين طرابلس ومصراتة وشهدت معارك تاريخية ضد الغزو الإيطالي؟",
+                "options": ["زليتن / الخمس (لابتة)", "البيضاء", "درنة", "طبرق"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي المدينة الليبية التي أُطلق عليها تاريخياً لقب 'عاصمة الجهاد' نظراً لكثرة المعارك والتضحيات الجسام لأبنائها؟",
+                "options": ["مدينة بنغازي / درنة / الجبل الأخضر (وبرقة عموماً)", "طرابلس", "سبها", "غريان"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو المؤتمر الوطني الذي عقده أهالي طرابلس وورشفانة والمجاهدون في سنة 1922 لتوحيد القيادة العسكرية برئاسة محمد بن عبد الله السويحلي؟",
+                "options": ["مؤتمر الأصابع (مؤتمر مسلاتة وغريان)", "مؤتمر سرت", "مؤتمر طرابلس التأسيسي", "مؤتمر برقة الوطني"],
+                "correct": 0
+            },
+            {
+                "q": "من هو البطل المجاهد الليبي زعيم الحركة الوطنية في مصراتة والذي استشهد في معركة يفرن أو السواني سنة 1920؟",
+                "options": ["رمضان السويحلي", "أحمد الشريف", "عمر المختار", "عبد النبي بالخير"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الاتفاق الذي عقدته إيطاليا مع الحركة الوطنية في طرابلس سنة 1919 ومنح الليبيين حق إدارة شؤونهم ومجلس تمثيلي (جمهورية طرابلس)؟",
+                "options": ["دستور الرجبان / اتفاقية صلة الرحم وريدو (معاهدة سواني بن آدم)", "اتفاقية أكلومة", "معاهدة لوزان", "ميثاق طرابلس"],
+                "correct": 0
+            },
+            {
+                "q": "في أي سنة أُسست الجامعة الليبية (الجامعة الليبية الأولى) كأول صرح أكاديمي عالي في المملكة؟",
+                "options": ["1955 م (بنوك بنغازي وطرابلس)", "1969 م", "1951 م", "1973 م"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو اسم أول إذاعة محلية رسمية انطلقت في ليبيا (إذاعة بنغازي / إذاعة طرابلس) خلال فترة الاستقلال والعهد الملكي؟",
+                "options": ["إذاعة المملكة الليبية (الإذاعة الليبية)", "صوت ليبيا الحرة", "إذاعة الجماهيرية", "إذاعة طرابلس الكبرى"],
+                "correct": 0
+            },
+            {
+                "q": "من هو الملك الذي تنازل عن العرش سنة 1969 لطمأنة البلاد وتسليم السلطة قبل الانقلاب العسكري بأيام؟",
+                "options": ["الملك محمد إدريس الأول السنوسي", "ولي العهد حسن الرضا", "الملك أحمد", "الأمير عبد الله"],
+                "correct": 0
+            },
+            {
+                "q": "من هو ولي عهد المملكة الليبية الذي عُين ولياً للعهد طيلة العهد الملكي؟",
+                "options": ["الأمير حسن الرضا السنوسي", "الأمير محمد السنوسي", "الأمير إدريس الثاني", "الأمير عمر"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي الاتفاقية الاقتصادية والنفطية الكبرى التي وقعتها ليبيا مع الشركات الغربية في أوائل السبعينيات لتعديل أسعار النفط وحصص الإنتاج؟",
+                "options": ["اتفاقية طرابلس النفطية (تصحيح أسعار النفط)", "اتفاقية أوبك الكبرى", "ميثاق البترول العربي", "اتفاقية باريس للنفط"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي اتفاقية الصداقة والشراكة الكبرى التي وقعتها ليبيا مع إيطاليا سنة 2008 لإنهاء ملف الاستعمار والتعويضات؟",
+                "options": ["معاهدة الصداقة والشراكة والتعاون الإيطالية الليبية (2008)", "معاهدة روما التاريخية", "اتفاقية بنغازي الثنائية", "ميثاق البحر المتوسط"],
+                "correct": 0
+            },
+            {
+                "q": "من هو رئيس الوزراء الإيطالي الذي زار بنغازي سنة 2008 وقدم اعتذاراً رسمياً لليبيا عن جرائم الاستعمار الإيطالي؟",
+                "options": ["سيلفيو برلسكوني", "رومانو برودي", "ماتيو رينزي", "جوسيبي كونتي"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو اسم الصحيفة الرسمية الأولى التي أُصدرت في عهد الوالي العثماني أحمد باشا القره مانلي أو في العهد العثماني الثاني (صحيفة طرابلس الغرب)؟",
+                "options": ["جريدة طرابلس الغرب (أول صحيفة رسمية 1866)", "صحيفة الفجر الجديد", "جريدة الجهاد", "صحيفة الحقيقة"],
+                "correct": 0
+            },
+            {
+                "q": "من هو الشاعر والمفكر الليبي رفيق الدرب مع عمر المختار وصاحب الديوان الشهير (ديوان أحمد رفيق المهدوي)؟",
+                "options": ["أحمد رفيق المهدوي", "عبد الله الزيات", "مصطفى الغول", "سليمان الفيتوري"],
+                "correct": 0
+            },
+            {
+                "q": "ما هو الاسم التاريخي للمنطقة الحدودية بين ليبيا ومصر والتي شهدت معارك عسكرية ودبلوماسية طيلة التاريخ الحديث؟",
+                "options": ["الحدود الشرقية / السلوم وبئر الغنام", "إقليم برقة الأدنى", "صحراء سيناء الغربية", "منطقة المساعد الكبرى"],
+                "correct": 0
+            },
+            {
+                "q": "ما هي الأهمية الاستراتيجية الكبرى التي تمتعت بها ليبيا طوال تاريخها الحديث والمعاصر؟",
+                "options": ["موقعها الجغرافي المتوسط بين إفريقيا وأوروبا وامتلاكها أطول ساحل على المتوسط وثروات النفط والغاز", "قربها من الأمريكتين", "ممر التجارة الآسيوية", "وجودها على المحيط الهادئ"],
+                "correct": 0
+            }
+        ];
+
+        var cardsData = [];
+        var originalCardsData = [];
+        var letters = ["أ", "ب", "ج", "د"];
+        var currentIndex = 0;
+        var score = 0;
+        var answersState = {};
+
+        function shuffleOptions(options, correctIndex) {
+            let indices = options.map((_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                let temp = indices[i];
+                indices[i] = indices[j];
+                indices[j] = temp;
+            }
+            let shuffledOptions = indices.map(i => options[i]);
+            let newCorrectIndex = indices.indexOf(correctIndex);
+            return {
+                options: shuffledOptions,
+                correct: newCorrectIndex
+            };
+        }
+
+        function initQuizData() {
+            cardsData = rawCardsData.map(card => {
+                let cloned = JSON.parse(JSON.stringify(card));
+                let shuffled = shuffleOptions(cloned.options, cloned.correct);
+                cloned.options = shuffled.options;
+                cloned.correct = shuffled.correct;
+                return cloned;
+            });
+            originalCardsData = JSON.parse(JSON.stringify(cardsData));
+        }
+
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let penActive = false;
+        let penColor = '#e11d48';
+        let penSize = 2.5;
+        let lastX = 0;
+        let lastY = 0;
+
+        function resizeCanvas() {
+            const wrapper = document.getElementById('quiz-app-wrapper');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(canvas, 0, 0);
+
+            canvas.width = wrapper.offsetWidth;
+            canvas.height = wrapper.offsetHeight;
+            
+            ctx.drawImage(tempCanvas, 0, 0);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            initQuizData();
+            resizeCanvas();
+            render();
+        });
+
+        function togglePen() {
+            penActive = !penActive;
+            const btn = document.getElementById('penToggleBtn');
+            const toolbar = document.getElementById('penToolbar');
+            
+            if (penActive) {
+                canvas.classList.add('drawing-active');
+                btn.classList.add('active');
+                btn.innerHTML = "✏️ إيقاف القلم";
+                toolbar.style.display = "flex";
+            } else {
+                canvas.classList.remove('drawing-active');
+                btn.classList.remove('active');
+                btn.innerHTML = "✏️ قلم الشرح الحقيقي";
+                toolbar.style.display = "none";
+            }
+        }
+
+        function setPenColor(color, element) {
+            penColor = color;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function setPenSize(size) {
+            penSize = parseFloat(size);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('mouseleave', stopDraw);
+
+        canvas.addEventListener('touchstart', (e) => { startDraw(e); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchend', stopDraw);
+
+        function startDraw(e) {
+            if (!penActive) return;
+            isDrawing = true;
+            const pos = getPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function draw(e) {
+            if (!isDrawing || !penActive) return;
+            const pos = getPos(e);
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = penColor;
+            ctx.lineWidth = penSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function stopDraw() {
+            isDrawing = false;
+        }
+
+        function render() {
+            if (cardsData.length === 0) {
+                showResult();
+                return;
+            }
+            if (currentIndex >= cardsData.length) {
+                currentIndex = cardsData.length - 1;
+            }
+
+            var item = cardsData[currentIndex];
+            document.getElementById("q-badge").innerText = "السؤال " + (currentIndex + 1);
+            document.getElementById("q-text").innerText = item.q;
+            document.getElementById("question-count").innerText = "السؤال " + (currentIndex + 1) + " من " + cardsData.length;
+            document.getElementById("total-q-badge").innerText = cardsData.length;
+            document.getElementById("progressBar").style.width = ((currentIndex + 1) / cardsData.length * 100) + "%";
+
+            document.getElementById("btn-prev").disabled = (currentIndex === 0);
+            document.getElementById("btn-next").disabled = (currentIndex === cardsData.length - 1);
+
+            var container = document.getElementById("options-container");
+            container.innerHTML = "";
+
+            var hasAnswered = answersState.hasOwnProperty(currentIndex);
+
+            for (var idx = 0; idx < item.options.length; idx++) {
+                (function(i) {
+                    var btn = document.createElement("button");
+                    btn.className = "opt-btn";
+                    
+                    var checkHtml = "";
+                    if (hasAnswered && i === item.correct) {
+                        checkHtml = '<span class="check-mark">✔</span>';
+                    }
+
+                    btn.innerHTML = '<span class="opt-text">' + item.options[i] + '</span>' + checkHtml + '<span class="opt-letter">' + letters[i] + '</span>';
+
+                    if (hasAnswered) {
+                        btn.disabled = true;
+                        if (i === item.correct) btn.className += " correct";
+                        else if (i === answersState[currentIndex]) btn.className += " wrong";
+                    } else {
+                        btn.onclick = function() {
+                            selectOption(i);
+                        };
+                    }
+                    container.appendChild(btn);
+                })(idx);
+            }
+            resizeCanvas();
+        }
+
+        function selectOption(selectedIndex) {
+            if (answersState.hasOwnProperty(currentIndex)) return;
+            answersState[currentIndex] = selectedIndex;
+            var item = cardsData[currentIndex];
+
+            if (selectedIndex === item.correct) {
+                score++;
+                document.getElementById("score-count").innerText = "النقاط: " + score;
+            }
+            render();
+        }
+
+        function resetCurrentAnswer() {
+            if (answersState.hasOwnProperty(currentIndex)) {
+                var prevSelected = answersState[currentIndex];
+                var item = cardsData[currentIndex];
+                if (prevSelected === item.correct) {
+                    score = Math.max(0, score - 1);
+                    document.getElementById("score-count").innerText = "النقاط: " + score;
+                }
+                delete answersState[currentIndex];
+                render();
+            }
+        }
+
+        function deleteCurrentQuestion() {
+            if (confirm("هل أنت متأكد من حذف هذه الشريحة / السؤال نهائياً؟")) {
+                if (answersState.hasOwnProperty(currentIndex)) {
+                    var prevSelected = answersState[currentIndex];
+                    if (prevSelected === cardsData[currentIndex].correct) {
+                        score = Math.max(0, score - 1);
+                        document.getElementById("score-count").innerText = "النقاط: " + score;
+                    }
+                }
+                cardsData.splice(currentIndex, 1);
+                delete answersState[currentIndex];
+                var newAnswers = {};
+                var keys = Object.keys(answersState).sort(function(a,b){return a-b;});
+                for(var k=0; k<keys.length; k++) {
+                    if(keys[k] > currentIndex) {
+                        newAnswers[keys[k]-1] = answersState[keys[k]];
+                    } else if(keys[k] < currentIndex) {
+                        newAnswers[keys[k]] = answersState[keys[k]];
+                    }
+                }
+                answersState = newAnswers;
+                clearCanvas();
+
+                if (currentIndex >= cardsData.length && currentIndex > 0) {
+                    currentIndex--;
+                }
+                render();
+            }
+        }
+
+        function nextQ() {
+            if (currentIndex < cardsData.length - 1) {
+                currentIndex++;
+                clearCanvas();
+                render();
+            }
+        }
+
+        function prevQ() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                clearCanvas();
+                render();
+            }
+        }
+
+        function showResult() {
+            document.getElementById("quiz-screen").style.display = "none";
+            document.getElementById("result-screen").style.display = "block";
+            document.getElementById("final-score").innerText = score + " / " + cardsData.length;
+            var percentage = cardsData.length > 0 ? (score / cardsData.length) * 100 : 0;
+            var msg = percentage >= 90 ? "أداء استثنائي مذهل! إحاطة شاملة وعميقة بالتاريخ الليبي الحديث والمعاصر." :
+                      percentage >= 75 ? "مستوى ممتاز جداً! أحسنت." :
+                      "مستوى جيد، استمر في مراجعة محطات تاريخ ليبيا العريق.";
+            document.getElementById("result-message").innerText = msg;
+        }
+
+        function restartQuiz() {
+            initQuizData();
+            currentIndex = 0; score = 0;
+            answersState = {};
+            clearCanvas();
+            document.getElementById("score-count").innerText = "النقاط: 0";
+            document.getElementById("result-screen").style.display = "none";
+            document.getElementById("quiz-screen").style.display = "block";
+            render();
+        }
+
+        async function exportImage() {
+            const wasPenActive = penActive;
+            if (penActive) togglePen();
+
+            if (!answersState.hasOwnProperty(currentIndex)) {
+                answersState[currentIndex] = cardsData[currentIndex].correct;
+                render();
+            }
+
+            await document.fonts.ready;
+            html2canvas(document.getElementById("quiz-app-wrapper"), { scale: 2.5, useCORS: true }).then(canvasImg => {
+                const link = document.createElement("a");
+                link.download = `موسوعة_التاريخ_الليبي_${currentIndex + 1}.png`;
+                link.href = canvasImg.toDataURL("image/png");
+                link.click();
+
+                if (wasPenActive) togglePen();
+            });
+        }
+
+        function saveModifiedFile() {
+            var fullHtml = document.documentElement.outerHTML;
+            var startMarker = "var rawCardsData = [";
+            var endMarker = "var cardsData = [];";
+            
+            var startIndex = fullHtml.indexOf(startMarker);
+            var endIndex = fullHtml.indexOf(endMarker);
+            
+            if (startIndex !== -1 && endIndex !== -1) {
+                var newScriptBlock = "var rawCardsData = " + JSON.stringify(rawCardsData, null, 4) + ";\n        var cardsData = [];";
+                fullHtml = fullHtml.substring(0, startIndex) + newScriptBlock + fullHtml.substring(endIndex + endMarker.length);
+            }
+
+            var blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "libya_history_100.html";
+            a.click();
+        }
+
+        function printAllQuestionsPDF() {
+            var printWin = window.open('', '_blank');
+            var html = '<html dir="rtl"><head><title>موسوعة التاريخ الليبي الحديث والمعاصر - 100 سؤال</title>';
+            html += '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet">';
+            html += '<style>body{font-family:Cairo,sans-serif;padding:20px;direction:rtl;color:#0f172a;}';
+            html += '.q-box{margin-bottom:18px;border-bottom:1px solid #cbd5e1;padding-bottom:12px;page-break-inside:avoid;}';
+            html += '.q-title{font-weight:900;font-size:16px;margin-bottom:8px;color:#071c3d;}';
+            html += '.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:14px;font-weight:700;}';
+            html += '.correct{color:#047857;font-weight:900;}';
+            html += 'h1{text-align:center;color:#071c3d;margin-bottom:25px;font-size:24px;}';
+            html += '</style></head><body>';
+            html += '<h1>موسوعة التاريخ الليبي الحديث والمعاصر - 100 سؤال<br><span style="font-size:14px;color:#475569;">من العهد العثماني الأول وحتى الاستقلال والجمهورية</span></h1>';
+
+            for (var i = 0; i < cardsData.length; i++) {
+                var item = cardsData[i];
+                html += '<div class="q-box">';
+                html += '<div class="q-title">' + (i + 1) + '. ' + item.q + '</div>';
+                html += '<div class="opts">';
+                for (var j = 0; j < item.options.length; j++) {
+                    var isCor = (j === item.correct) ? ' class="correct"' : '';
+                    html += '<div' + isCor + '>(' + letters[j] + ') ' + item.options[j] + (isCor ? ' ✔' : '') + '</div>';
+                }
+                html += '</div></div>';
+            }
+
+            html += '</body></html>';
+            printWin.document.write(html);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(function() {
+                printWin.print();
+            }, 600);
+        }
+    </script>
+
+</body>
+</html>
