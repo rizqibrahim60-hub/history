@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بنك أسئلة التاريخ - ملوك المملكة العربية السعودية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Almarai:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Almarai', sans-serif; }
+        body { background-color: #051329; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .main-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; background: #08162e; padding: 10px 20px; border-radius: 50px; border: 1px solid #d4af37; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 1000; align-items: center; }
+        .btn-ctrl { border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; color: #ffffff; transition: all 0.2s ease; }
+        .btn-nav { background: #1e3a8a; } 
+        .btn-pdf { background: #0284c7; } 
+        .btn-img { background: #10b981; } 
+        .btn-pen { background: #b45309; } 
+        .btn-pen.active { background: #d97706; border: 2px solid #fff; box-shadow: 0 0 10px #d97706; }
+        .btn-reset-ans { background: #d97706; }
+        .btn-delete-q { background: #dc2626; }
+        .btn-edit-q { background: #0ea5e9; }
+        .btn-save-file { background: #7c3aed; }
+
+        .pen-toolbar { display: none; gap: 12px; margin-bottom: 15px; background: #111d38; padding: 8px 22px; border-radius: 30px; border: 1.5px solid #10b981; align-items: center; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .color-dot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; display: inline-block; transition: 0.2s; }
+        .color-dot.selected { transform: scale(1.25); border-width: 3px; border-color: #d4af37; }
+        .btn-clear-canvas { background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
+
+        #quiz-app-wrapper { position: relative; width: 100%; max-width: 980px; }
+        #quiz-app { width: 100%; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6); border: 4px solid #081d3d; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        #drawCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 500; touch-action: none; border-radius: 24px; }
+        #drawCanvas.drawing-active { pointer-events: auto; cursor: crosshair; }
+
+        .top-header { background: linear-gradient(180deg, #071c3d 0%, #0d2859 100%); padding: 18px 30px; color: #ffffff; border-bottom: 4px solid #d4af37; display: flex; justify-content: space-between; align-items: center; }
+        .header-center { text-align: center; flex-grow: 1; }
+        .main-title { font-size: 21px; font-weight: 900; color: #ffffff; line-height: 1.2; }
+        .sub-title { color: #d4af37; font-size: 13px; font-weight: 700; margin-top: 3px; }
+        .author-name { color: #d4af37; font-size: 14px; font-weight: 800; margin-top: 4px; }
+        .header-icon-circle { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #d4af37; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #d4af37; }
+
+        .progress-bar-container { background: #e2e8f0; height: 6px; width: 100%; }
+        .progress-bar { background: #10b981; height: 100%; width: 1%; transition: width 0.2s ease; }
+        .status-row { display: flex; justify-content: space-between; padding: 12px 40px 0 40px; font-size: 15px; font-weight: 900; color: #0d2859; }
+
+        .card-body { padding: 20px 40px 30px 40px; flex-grow: 1; display: flex; flex-direction: column; gap: 16px; justify-content: center; }
+        #cover-screen { text-align: center; padding: 35px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .cover-ministry { font-size: 14px; font-weight: 800; color: #d4af37; line-height: 1.5; }
+        .cover-book-title { font-size: 38px; font-weight: 900; color: #d4af37; margin: 5px 0; }
+        .cover-book-subtitle { font-size: 26px; font-weight: 900; color: #0d2859; margin: 5px 0; }
+        .cover-edition { font-size: 13px; font-weight: 800; color: #475569; margin-top: 10px; }
+        .btn-start-quiz { background: #0d2859; color: #d4af37; border: 2px solid #d4af37; padding: 12px 40px; border-radius: 30px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+
+        .main-question-card { border: 2.5px solid #0d2859; border-radius: 18px; padding: 18px 24px; background: #ffffff; box-shadow: 0 4px 15px rgba(13, 40, 89, 0.04); }
+        .badge-q-tag { background: #0d2859; color: #d4af37; border: 1.5px solid #d4af37; padding: 7px 18px; border-radius: 10px; font-size: 17px; font-weight: 800; white-space: nowrap; display: inline-block; margin-bottom: 10px; }
+        .q-text-content { font-size: 18px; font-weight: 800; color: #0f172a; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .opt-btn { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s ease; text-align: right; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .opt-letter { width: 32px; height: 32px; background: #e2e8f0; color: #0d2859; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; flex-shrink: 0; margin-right: 12px; }
+        .opt-text { font-size: 15px; font-weight: 800; color: #1e293b; flex-grow: 1; }
+
+        .opt-btn.correct { background: #ecfdf5 !important; border-color: #10b981 !important; }
+        .opt-btn.correct .opt-letter { background: #10b981 !important; color: #ffffff !important; }
+        .opt-btn.wrong { background: #fef2f2 !important; border-color: #ef4444 !important; }
+        .opt-btn.wrong .opt-letter { background: #ef4444 !important; color: #ffffff !important; }
+        .check-mark { font-size: 20px; font-weight: 900; color: #10b981; margin-right: auto; margin-left: 10px; background: #d1fae5; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #10b981; }
+
+        #result-screen { display: none; text-align: center; padding: 40px 20px; }
+        .result-score { font-size: 48px; font-weight: 900; color: #10b981; margin: 15px 0; }
+        .btn-restart { background: #0d2859; color: #d4af37; border: 2px solid #d4af37; padding: 12px 35px; border-radius: 25px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 20px; }
+
+        .bottom-footer { background: linear-gradient(180deg, #071c3d 0%, #0d2859 100%); border-top: 4px solid #d4af37; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; color: #ffffff; }
+        .footer-sec { display: flex; align-items: center; gap: 10px; }
+        .footer-sec-center { text-align: center; }
+        .footer-text-val { font-size: 14px; font-weight: 900; direction: ltr; color: #d4af37; }
+        .footer-author-main { font-size: 17px; font-weight: 900; color: #d4af37; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: #08162e; border: 2px solid #d4af37; border-radius: 20px; width: 100%; max-width: 650px; padding: 25px; color: #fff; display: flex; flex-direction: column; gap: 15px; max-height: 90vh; overflow-y: auto; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 14px; font-weight: 800; color: #cbd5e1; }
+        .form-group textarea, .form-group input { background: #051329; border: 1.5px solid #1e3a8a; border-radius: 10px; padding: 10px; color: #fff; font-size: 14px; font-weight: 700; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+        .btn-modal-save { background: #10b981; color: white; border: none; padding: 10px 22px; border-radius: 12px; font-weight: 900; cursor: pointer; }
+        .btn-modal-cancel { background: #64748b; color: white; border: none; padding: 10px 22px; border-radius: 12px; font-weight: 900; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="main-controls">
+        <button class="btn-ctrl btn-nav" onclick="prevQ()">➔ السابق</button>
+        <button class="btn-ctrl btn-pen" id="penToggleBtn" onclick="togglePen()">✏️ قلم الشرح الحقيقي</button>
+        <button class="btn-ctrl btn-nav" onclick="nextQ()">التالي ⬅</button>
+        <div style="width:1px; height:20px; background:#d4af37;"></div>
+        <button class="btn-ctrl btn-pdf" onclick="window.print()">📄 طباعة PDF</button>
+        <button class="btn-ctrl btn-img" onclick="exportImage()">🖼️ تصدير صورة PNG</button>
+        <button class="btn-ctrl btn-save-file" onclick="saveModifiedFile()">💾 حفظ التعديلات في ملف</button>
+        <button class="btn-ctrl btn-reset-ans" onclick="resetCurrentAnswer()">🔄 مسح الإجابة</button>
+        <button class="btn-ctrl btn-edit-q" onclick="openEditModal()">✏️ تعديل السؤال</button>
+        <button class="btn-ctrl btn-delete-q" onclick="deleteCurrentQuestion()">❌ حذف</button>
+    </div>
+
+    <div class="pen-toolbar" id="penToolbar">
+        <span style="color:#d4af37; font-weight:bold;">الألوان:</span>
+        <span class="color-dot selected" style="background: #d4af37;" onclick="setPenColor('#d4af37', this)"></span>
+        <span class="color-dot" style="background: #2563eb;" onclick="setPenColor('#2563eb', this)"></span>
+        <span class="color-dot" style="background: #16a34a;" onclick="setPenColor('#16a34a', this)"></span>
+        <span class="color-dot" style="background: #e11d48;" onclick="setPenColor('#e11d48', this)"></span>
+        <button class="btn-clear-canvas" onclick="clearCanvas()">🗑️ مسح الخطوط</button>
+    </div>
+
+    <div id="quiz-app-wrapper">
+        <canvas id="drawCanvas"></canvas>
+        <div id="quiz-app">
+            <div class="top-header">
+                <div class="header-icon-circle">📜</div>
+                <div class="header-center">
+                    <div class="main-title">بنك أسئلة التاريخ - ملوك المملكة العربية السعودية (<span id="total-q-badge">0</span> سؤالاً)</div>
+                    <div class="sub-title">سير الملوك، إنجازاتهم الحضارية، الفترات التاريخية، والمناصب القيادية</div>
+                    <div class="author-name">إبراهيم أبوزيد | معلم ومدرب وباحث[cite: 1]</div>
+                </div>
+                <div class="header-icon-circle">⚔️</div>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+            <div id="cover-screen">
+                <div class="cover-ministry">المملكة العربية السعودية<br>وزارة التعليم — الدراسات الاجتماعية</div>
+                <div class="cover-book-title">ملوك المملكة العربية السعودية</div>
+                <div class="cover-book-subtitle">بنك الأسئلة الشامل (112 سؤالاً دقيقاً)</div>
+                <div class="cover-edition">إعداد: الأستاذ / إبراهيم أبو زيد[cite: 1]</div>
+                <button class="btn-start-quiz" onclick="startQuizFromCover()">ابدأ الاختبار 🚀</button>
+            </div>
+            <div id="quiz-screen" style="display: none;">
+                <div class="status-row"><span id="question-count"></span><span id="score-count">النقاط: 0</span></div>
+                <div class="card-body">
+                    <div class="main-question-card">
+                        <div class="badge-q-tag" id="q-badge"></div>
+                        <div class="q-text-content" id="q-text"></div>
+                    </div>
+                    <div class="options-grid" id="options-container"></div>
+                </div>
+            </div>
+            <div id="result-screen">
+                <h2>لقد أنهيت جميع الأسئلة بنجاح!</h2>
+                <div class="result-score" id="final-score"></div>
+                <button class="btn-restart" onclick="restartQuiz()">إعادة الاختبار 🔄</button>
+            </div>
+            <div class="bottom-footer">
+                <div class="footer-sec"><span class="footer-text-val">t.me/myibhistoricy</span></div>
+                <div class="footer-sec-center"><div class="footer-author-main">إبراهيم أبوزيد[cite: 1]</div></div>
+                <div class="footer-sec"><span class="footer-text-val">966 55 783 1353</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-title" style="color:#d4af37; font-weight:900; text-align:center;">✏️ تعديل السؤال والإجابات</div>
+            <div class="form-group"><label>نص السؤال:</label><textarea id="editQText" rows="3"></textarea></div>
+            <div class="form-group"><label>الخيار الأول (أ):</label><input type="text" id="editOpt0"></div>
+            <div class="form-group"><label>الخيار الثاني (ب):</label><input type="text" id="editOpt1"></div>
+            <div class="form-group"><label>الخيار الثالث (ج):</label><input type="text" id="editOpt2"></div>
+            <div class="form-group"><label>الخيار الرابع (د):</label><input type="text" id="editOpt3"></div>
+            <div class="form-group"><label>رقم الإجابة الصحيحة (1 إلى 4):</label><input type="number" id="editCorrectIndex" min="1" max="4"></div>
+            <div class="modal-buttons">
+                <button class="btn-modal-cancel" onclick="closeEditModal()">إلغاء</button>
+                <button class="btn-modal-save" onclick="saveEditedQuestion()">حفظ التعديل</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var rawCardsData = [
+            { q: "الأسرة المالكة التي تحكم المملكة العربية السعودية هي", options: ["آل رشيد", "آل سعود", "آل صباح", "آل ثاني"], correct: 1 },
+            { q: "المنهج الذي تحكم به الأسرة المالكة (آل سعود) في المملكة العربية السعودية يتمثل في", options: ["القوانين الوضعية", "الأعراف القبلية", "الشريعة الإسلامية", "النظم الإدارية الحديثة"], correct: 2 },
+            { q: "تعمل الأسرة المالكة في المملكة العربية السعودية على تنمية البلاد ورُقِيّها بالإضافة إلى خدمة", options: ["البعثات الدولية والتجارة العالمية", "الأحلاف السياسية الإقليمية", "الإسلام والمسلمين والحرمين الشريفين", "المنظمات الاقتصادية الدولية"], correct: 2 },
+            { q: "الذين تولوا المسؤولية وحملوا الحُكم بعد وفاة المؤسس الملك عبدالعزيز هم", options: ["أبناؤه", "إخوانه", "أحفاده", "وزراؤه"], correct: 0 },
+            { q: "استنار أبناء الملك عبدالعزيز في مواصلة مسيرة العطاء والتقدم بنهج", options: ["المؤتمرات الدولية", "الشريعة الإسلامية", "المعاهدات السياسية", "التنظيمات الإقليمية"], correct: 1 },
+            { q: "التزم ملوك المملكة العربية السعودية بعد وفاة المؤسس بقيم ومبادئ الشريعة الإسلامية بالإضافة إلى الحفاظ على أمن البلاد واستقرارها ورخاء مواطنيها وتعزيز", options: ["المعاهدات العسكرية", "الوحدة الوطنية", "التجارة الخارجية", "العلاقات الدبلوماسية"], correct: 1 },
+            { q: "أول من تولى الحكم من أبناء الملك عبدالعزيز بعد وفاته هو الملك", options: ["فيصل بن عبدالعزيز", "خالد بن عبدالعزيز", "سعود بن عبدالعزيز", "فهد بن عبدالعزيز"], correct: 2 },
+            { q: "الفترة الزمنية التي تولى فيها الملك سعود بن عبدالعزيز الحكم تمتد بين عامي", options: ["1373 - 1384هـ", "1384 - 1395هـ", "1395 - 1402هـ", "1402 - 1426هـ"], correct: 0 },
+            { q: "الملك الذي تولى الحكم مباشرة بعد الملك سعود بن عبدالعزيز هو الملك", options: ["خالد بن عبدالعزيز", "فيصل بن عبدالعزيز", "فهد بن عبدالعزيز", "عبدالله بن عبدالعزيز"], correct: 1 },
+            { q: "تولى الملك فيصل بن عبدالعزيز الحكم في المدة ما بين عامي", options: ["1373 - 1384هـ", "1395 - 1402هـ", "1384 - 1395هـ", "1402 - 1426هـ"], correct: 2 },
+            { q: "امتدت مدة حكم الملك خالد بن عبدالعزيز بين عامي", options: ["1384 - 1395هـ", "1402 - 1426هـ", "1373 - 1384هـ", "1395 - 1402هـ"], correct: 3 },
+            { q: "الملك الذي تولى مقاليد الحكم خلال الفترة من عام 1402هـ إلى عام 1426هـ هو الملك", options: ["خالد بن عبدالعزيز", "فهد بن عبدالعزيز", "عبدالله بن عبدالعزيز", "فيصل بن عبدالعزيز"], correct: 1 },
+            { q: "تولى الملك عبدالله بن عبدالعزيز الحكم في المدة الزمنية الممتدة بين عامي", options: ["1395 - 1402هـ", "1402 - 1426هـ", "1426 - 1436هـ", "1436هـ حتى الآن"], correct: 2 },
+            { q: "العام الهجري الذي تولى فيه خادم الحرمين الشريفين الملك سلمان بن عبدالعزيز الحكم هو", options: ["1426هـ", "1436هـ", "1440هـ", "1402هـ"], correct: 1 },
+            { q: "اللقب الذي اقترن باسم الملك سلمان بن عبدالعزيز في تسلسل ملوك المملكة هو", options: ["المؤسس", "خادم الحرمين الشريفين", "القائد الأعلى", "الفيصل"], correct: 1 },
+            { q: "المدينة التي وُلِد فيها الملك سعود بن عبدالعزيز هي", options: ["الرياض", "الكويت", "مكة المكرمة", "المدينة المنورة"], correct: 1 },
+            { q: "العام الهجري الذي وُلِد فيه الملك سعود بن عبدالعزيز هو", options: ["1319هـ", "1320هـ", "1352هـ", "1373هـ"], correct: 0 },
+            { q: "تلقى الملك سعود بن عبدالعزيز نشأته الأولى وتربى في", options: ["قصر الحكم", "بيت جده لأمه", "بيت والده", "مدارس الفلاح"], correct: 2 },
+            { q: "العلوم التي تعلمها الملك سعود بن عبدالعزيز على يد بعض العلماء بجانب القراءة والكتابة هي العلوم", options: ["الشرعية", "الطبيعية", "الفلكية", "العسكرية"], correct: 0 },
+            { q: "تحولت مديرية المعارف إلى وزارة المعارف في عهد الملك سعود بن عبدالعزيز عام", options: ["1319هـ", "1352هـ", "1372هـ", "1373هـ"], correct: 3 },
+            { q: "النتيجة المباشرة لتحويل مديرية المعارف إلى وزارة المعارف عام 1373هـ هي", options: ["إنشاء الكليات العسكرية فقط", "تقليص البعثات الخارجية", "زيادة عدد المدارس والمعاهد والكليات", "افتتاح المدارس الصناعية"], correct: 2 },
+            { q: "أول جامعة أُنشئت في المملكة العربية السعودية هي", options: ["الجامعة الإسلامية", "جامعة الملك سعود", "جامعة الملك عبدالعزيز", "جامعة أم القرى"], correct: 1 },
+            { q: "المدينة التي أُنشئت فيها أول جامعة بالمملكة العربية السعودية (جامعة الملك سعود) هي", options: ["جدة", "الرياض", "مكة المكرمة", "المدينة المنورة"], correct: 1 },
+            { q: "الجامعة التي أُنشئت في المدينة المنورة في عهد الملك سعود بن عبدالعزيز هي", options: ["جامعة الإمام", "جامعة طيبة", "الجامعة الإسلامية", "جامعة أم القرى"], correct: 2 },
+            { q: "من الوزارات التي تم إنشاؤها في عهد الملك سعود بن عبدالعزيز وزارات", options: ["البترول، والصناعة، والبيئة", "الزراعة، والتجارة، والمواصلات، والصحة", "الطاقة، والسياحة، والاتصالات", "الخدمة المدنية، والعمل، والعدل"], correct: 1 },
+            { q: "شملت مشروعات توسعة الحرمين الشريفين في عهد الملك سعود بن عبدالعزيز كلاً من", options: ["المسجد الأقصى والمسجد النبوي", "مسجد قباء والمسجد الحرام", "المسجد الحرام والمسجد النبوي", "المسجد الحرام ومسجد القبلتين"], correct: 2 },
+            { q: "الجهة التعليمية التي تأسست في عهد الملك سعود بن عبدالعزيز لتعليم الإناث هي", options: ["الرئاسة العامة لتعليم البنات", "مصلحة شؤون الفتيات", "هيئة المعاهد النسائية", "إدارة شؤون الطالبات"], correct: 0 },
+            { q: "قاد الأمير سعود بن عبدالعزيز أثناء مرحلة توحيد البلاد الحملة المتجهة إلى", options: ["حائل", "الأحساء", "عسير", "نجران"], correct: 0 },
+            { q: "شملت رحلات الملك سعود بن عبدالعزيز قبل توليه الحكم معظم مناطق المملكة بالإضافة إلى زيارة دول", options: ["أوروبية وأمريكية ولاتينية فقط", "عربية وإسلامية وأجنبية", "آسيوية وأفريقية فقط", "إسكندنافية وشرق أوسطية"], correct: 1 },
+            { q: "بويع الأمير سعود بن عبدالعزيز بولاية العهد في عام", options: ["1319هـ", "1372هـ", "1352هـ", "1373هـ"], correct: 2 },
+            { q: "تولى الملك سعود بن عبدالعزيز قبل الحكم إدارة شؤون المنطقة الوسطى من البلاد خلال مدة غياب والده في", options: ["الكويت", "حائل", "الحجاز", "الأحساء"], correct: 2 },
+            { q: "المنصب العسكري الرفيع الذي تولاه الملك سعود بن عبدالعزيز عام 1372هـ هو", options: ["وزير الدفاع والطيران", "قائد الحرس الملكي", "القيادة العليا للقوات المسلحة السعودية", "رئيس الأركان العامة"], correct: 2 },
+            { q: "تنازل الملك سعود بن عبدالعزيز عن الحكم في عام", options: ["1373هـ", "1384هـ", "1388هـ", "1395هـ"], correct: 1 },
+            { q: "الشخصية التي بويعت ملكاً على البلاد بعد تنازل الملك سعود بن عبدالعزيز عن الحكم عام 1384هـ هي", options: ["الأمير خالد بن عبدالعزيز", "الأمير فهد بن عبدالعزيز", "ولي عهده الأمير فيصل بن عبدالعزيز", "الأمير سلطان بن عبدالعزيز"], correct: 2 },
+            { q: "المنصب الذي كان يشغله الأمير فيصل بن عبدالعزيز قبل مبايعته ملكاً على البلاد عام 1384هـ هو", options: ["رئيس مجلس الشورى", "ولي العهد", "وزير المعارف", "رئيس الحرس الوطني"], correct: 1 },
+            { q: "توفي الملك سعود بن عبدالعزيز سنة", options: ["1384هـ", "1388هـ", "1395هـ", "1402هـ"], correct: 1 },
+            { q: "الدولة التي توفي فيها الملك سعود بن عبدالعزيز عام 1388هـ هي دولة", options: ["مصر", "بريطانيا", "اليونان", "فرنسا"], correct: 2 },
+            { q: "بعد وفاة الملك سعود بن عبدالعزيز في اليونان نُقِل جثمانه أولاً إلى", options: ["الرياض", "المدينة المنورة", "مكة المكرمة", "جدة"], correct: 2 },
+            { q: "المكان الذي صُلِّي فيه على جثمان الملك سعود بن عبدالعزيز هو", options: ["المسجد النبوي", "جامع الإمام تركي بن عبدالله", "المسجد الحرام", "جامع الراجحي"], correct: 2 },
+            { q: "بعد الصلاة على الملك سعود بن عبدالعزيز في المسجد الحرام نُقِل جثمانه ليُدفن في", options: ["مقبرة البقيع بالمدينة المنورة", "مقبرة المعلاة بمكة المكرمة", "مقبرة العود بالرياض", "مقبرة المنصورية بالدرعية"], correct: 2 },
+            { q: "اسم المقبرة التي دُفِن فيها الملك سعود بن عبدالعزيز في مدينة الرياض هو مقبرة", options: ["العود", "النسيم", "أم الحمام", "الشمال"], correct: 0 },
+            { q: "المدينة التي وُلِد فيها الملك فيصل بن عبدالعزيز هي", options: ["مكة المكرمة", "جدة", "الرياض", "الطائف"], correct: 2 },
+            { q: "العام الهجري الذي وُلِد فيه الملك فيصل بن عبدالعزيز هو", options: ["1319هـ", "1324هـ", "1352هـ", "1373هـ"], correct: 1 },
+            { q: "الشيخ الذي تعلّم الملك فيصل بن عبدالعزيز على يده القراءة والكتابة والعلوم الشرعية هو جده لأمه الشيخ", options: ["محمد بن عبدالوهاب", "عبدالله بن عبداللطيف آل الشيخ", "عبدالرحمن بن حسن آل الشيخ", "حسن بن حسين آل الشيخ"], correct: 1 },
+            { q: "صلة القرابة بين الملك فيصل بن عبدالعزيز والشيخ عبدالله بن عبداللطيف آل الشيخ هي أنه", options: ["عمه", "خاله", "جده لأمه", "جده لأبيه"], correct: 2 },
+            { q: "اكتسب الملك فيصل بن عبدالعزيز المهارات الإدارية والسياسية والعسكرية من خلال", options: ["دراسته في المعاهد العسكرية الخارجية", "حضوره مجالس أبيه", "رحلاته الاستكشافية المنفردة", "رئاسته المبكرة للبعثات الدبلوماسية"], correct: 1 },
+            { q: "المهارات التي اكتسبها الملك فيصل بن عبدالعزيز نتيجة حضور مجالس أبيه هي مهارات", options: ["تجارية وصناعية وزراعية", "إدارية وسياسية وعسكرية", "فلكية وملاحية وجغرافية", "قانونية ودولية وقضائية"], correct: 1 },
+            { q: "شملت جهود الملك فيصل بن عبدالعزيز في التعليم فتح الكثير من المدارس لـ", options: ["البنين فقط", "البنات فقط", "البنين والبنات", "المعلمين والمعلمات فقط"], correct: 2 },
+            { q: "من الجامعات التي أُنشئت في عهد الملك فيصل بن عبدالعزيز", options: ["جامعة الملك سعود وجامعة الملك فهد للبترول", "جامعة الإمام محمد بن سعود الإسلامية وجامعة الملك عبدالعزيز", "الجامعة الإسلامية وجامعة أم القرى", "جامعة طيبة وجامعة حائل"], correct: 1 },
+            { q: "المشروع المائي والزراعي الحيوي الذي أنشأه الملك فيصل بن عبدالعزيز في الأحساء هو مشروع", options: ["الرَّي والصَّرْف", "حفر الآبار الارتوازية", "السدود المائية الكبرى", "تحلية مياه البحر"], correct: 0 },
+            { q: "المشروع الذي أُنشئ في عهد الملك فيصل بن عبدالعزيز لتطوير ودعم التنمية الحيوانية هو مشروع", options: ["الخرج", "حَرَض", "الدواسر", "القصيم"], correct: 1 },
+            { q: "الميناء البحري الإسلامي الذي افتُتِح في عهد الملك فيصل بن عبدالعزيز هو ميناء", options: ["ينبع الإسلامي", "الدمام الإسلامي", "جدة الإسلامي", "جازان الإسلامي"], correct: 2 },
+            { q: "المحطة التلفزيونية التي تم افتتاحها في عهد الملك فيصل بن عبدالعزيز هي محطة تلفزيون", options: ["جدة", "الدمام", "المدينة المنورة", "الرياض"], correct: 3 },
+            { q: "القضية المحورية التي قدم لها الملك فيصل بن عبدالعزيز كل عون ووضعها في صدارة قضايا العالم الإسلامي هي", options: ["القضية الأفغانية", "القضية الفلسطينية", "قضية استقلال الهند", "قضية الحدود الإقليمية"], correct: 1 },
+            { q: "المبدأ الإسلامي العام الذي تبنّى الملك فيصل بن عبدالعزيز الدعوة إليه لنصرة قضايا العالم الإسلامي هو", options: ["التضامن الإسلامي", "المعاهدات المشتركة", "التحالف الاقتصادي", "الوفاق القومي"], correct: 0 },
+            { q: "في مجال النقل والمواصلات اعتنى الملك فيصل بن عبدالعزيز بالطرق بالإضافة إلى تحسين خدمات", options: ["النقل النهري الداخلي", "السُّكَك الحديدية", "الأساطيل الجوية التجارية", "الملاحة البحرية الدولية"], correct: 1 },
+            { q: "شملت جهود الملك فيصل بن عبدالعزيز في تطوير منظومة الاتصالات العناية بالاتصالات", options: ["البريدية السريعة", "السلكية وغير السلكية", "الفضائية الحديثة", "التلغرافية البحرية"], correct: 1 },
+            { q: "قاد الملك فيصل بن عبدالعزيز قبل توليه الحكم الوفد السعودي إلى مؤتمر لندن المخصص لمناقشة", options: ["تداعيات الحرب العالمية الأولى", "معاهدة جدة", "القضية الفلسطينية", "ترسيم الحدود البرية"], correct: 2 },
+            { q: "رأس الأمير فيصل بن عبدالعزيز وفد المملكة العربية السعودية الموجه للتوقيع على", options: ["ميثاق هيئة الأمم المتحدة", "اتفاقية العصبة الدولية", "معاهدة الدفاع المشترك", "ميثاق حلف بغداد"], correct: 0 },
+            { q: "قاد الأمير فيصل بن عبدالعزيز أثناء مهامه الوطنية الحملة العسكرية المتجهة لضم منطقة", options: ["حائل", "الحجاز", "عسير", "نجران"], correct: 2 },
+            { q: "المناصب التي عُيّن فيها الأمير فيصل بن عبدالعزيز في عهد والده الملك عبدالعزيز هي", options: ["نائباً على الحجاز ورئيساً لمجلس الشورى ووزيراً للخارجية", "ولياً للعهد ووزيراً للدفاع ورئيساً لمجلس الوزراء", "نائباً على نجد ورئيساً لديوان المظالم ووزيراً للمالية", "أميراً على الرياض وقائداً للجيش ووزيراً للداخلية"], correct: 0 },
+            { q: "المناصب التي تولاها الأمير فيصل بن عبدالعزيز في عهد أخيه الملك سعود هي", options: ["رئيساً لمجلس الشورى وحاكماً للحجاز", "ولياً للعهد ورئيساً لمجلس الوزراء ووزيراً للخارجية", "نائباً للقائد الأعلى وقائداً للحرس الوطني", "وزيراً للمعارف ووزيراً للزراعة ورئيساً للديوان"], correct: 1 },
+            { q: "العام الهجري الذي استُشهِد فيه الملك فيصل بن عبدالعزيز هو", options: ["1384هـ", "1388هـ", "1395هـ", "1402هـ"], correct: 2 },
+            { q: "المدينة التي استُشهِد ودُفِن فيها الملك فيصل بن عبدالعزيز هي", options: ["الرياض", "مكة المكرمة", "جدة", "المدينة المنورة"], correct: 0 },
+            { q: "اسم المقبرة التي دُفِن فيها الملك فيصل بن عبدالعزيز في الرياض هو مقبرة", options: ["النسيم", "العود", "المنصورية", "أم الحمام"], correct: 1 },
+            { q: "الشخصية التي تولت الحكم مباشرة بعد استشهاد الملك فيصل بن عبدالعزيز هي", options: ["ولي عهده الأمير خالد بن عبدالعزيز", "الأمير فهد بن عبدالعزيز", "الأمير عبدالله بن عبدالعزيز", "الأمير سلطان بن عبدالعزيز"], correct: 0 },
+            { q: "المنصب الذي كان يشغله الأمير خالد بن عبدالعزيز قبل توليه مقاليد الحكم بعد استشهاد الملك فيصل بن عبدالعزيز هو", options: ["رئيس مجلس الشورى", "وزير الداخلية", "ولي العهد", "رئيس الحرس الوطني"], correct: 2 },
+            { q: "المدينة التي وُلِد فيها الملك خالد بن عبدالعزيز هي", options: ["مكة المكرمة", "الطائف", "الرياض", "جدة"], correct: 2 },
+            { q: "العام الهجري الذي وُلِد فيه الملك خالد بن عبدالعزيز هو", options: ["1319هـ", "1324هـ", "1331هـ", "1352هـ"], correct: 2 },
+            { q: "نشأ الملك خالد بن عبدالعزيز في", options: ["رعاية والده", "كفالة جده", "مدارس الفلاح", "مكاتب الأمراء"], correct: 0 },
+            { q: "أتم الملك خالد بن عبدالعزيز في طفولته بجانب تعلم القراءة والكتابة", options: ["نظم الشعر", "خَتْمَ القرآن الكريم", "تعلّم اللغات الأجنبية", "دراسة الفلك"], correct: 1 },
+            { q: "درس الملك خالد بن عبدالعزيز العلوم الشرعية على أيدي", options: ["معلمين من خارج البلاد", "قضاة المحاكم المستحدثة", "عدد من العلماء", "كتاب الديوان الملكي"], correct: 2 },
+            { q: "وصل عدد الوزارات في المملكة العربية السعودية خلال عهد الملك خالد بن عبدالعزيز إلى", options: ["عشر وزارات", "خمس عشرة وزارة", "عشرين وزارة", "خمس وعشرين وزارة"], correct: 2 },
+            { q: "الجامعة التي تم افتتاحها في مكة المكرمة في عهد الملك خالد بن عبدالعزيز هي", options: ["جامعة الملك عبدالعزيز", "جامعة أم القرى", "الجامعة الإسلامية", "جامعة الإمام محمد بن سعود"], correct: 1 },
+            { q: "الجامعة التي تم افتتاحها في محافظة الأحساء في عهد الملك خالد بن عبدالعزيز هي", options: ["جامعة الملك فيصل", "جامعة الإمام عبدالرحمن بن فيصل", "جامعة حفر الباطن", "جامعة الملك فهد"], correct: 0 },
+            { q: "شملت مشروعات البنية التحتية والنقل في عهد الملك خالد بن عبدالعزيز تطوير شبكة الاتصالات بالإضافة إلى تطوير شبكات", options: ["الملاحة البحرية والموانئ", "الطرق والجسور والأنفاق", "النقل الجوي والمدارج", "القنوات المائية والأنهار"], correct: 1 },
+            { q: "من المهام المبكرة التي قام بها الملك خالد بن عبدالعزيز في عهد والده الملك عبدالعزيز", options: ["المشاركة في بعض حملات توحيد المملكة", "تأسيس وزارة المعارف", "قيادة المفاوضات في الأمم المتحدة", "رئاسة مجلس الشورى"], correct: 0 },
+            { q: "الشخصية التي رافقها الملك خالد بن عبدالعزيز في عدة رحلات خارجية خارج البلاد هي أخوه", options: ["الملك سعود", "الملك فهد", "الملك فيصل", "الملك عبدالله"], correct: 2 },
+            { q: "المنصب الاستشاري الذي تولاه الملك خالد بن عبدالعزيز هو عمله مستشاراً لأخيه الملك فيصل عندما كان نائباً عن والده في", options: ["نجد", "الحجاز", "الأحساء", "عسير"], correct: 1 },
+            { q: "ترأس الأمير خالد بن عبدالعزيز الوفد السعودي المفاوض بين المملكة العربية السعودية واليمن في الطائف عام", options: ["1331هـ", "1352هـ", "1373هـ", "1384هـ"], correct: 1 },
+            { q: "المدينة التي عُقدت فيها المفاوضات بين المملكة العربية السعودية واليمن برئاسة الأمير خالد بن عبدالعزيز عام 1352هـ هي", options: ["الرياض", "مكة المكرمة", "الطائف", "جازان"], correct: 2 },
+            { q: "المناصب التي عُيّن فيها الأمير خالد بن عبدالعزيز بعد مبايعة أخيه الملك فيصل بالحكم هي", options: ["وزيراً للدفاع ورئيساً للحرس الوطني", "ولياً للعهد ونائباً لرئيس مجلس الوزراء", "نائباً على الحجاز ورئيساً للشورى", "وزيراً للخارجية وأميراً لمنطقة الرياض"], correct: 1 },
+            { q: "الهيئة الملكية التي تم تأسيسها في عهد الملك خالد بن عبدالعزيز خُصصت لمدينتي", options: ["الرياض والدمام", "الجبيل وينبع الصناعيتين", "مكة المكرمة والمدينة المنورة", "رابغ وجازان"], correct: 1 },
+            { q: "تضمنت إنجازات الملك خالد بن عبدالعزيز الصناعية تأسيس الهيئة الملكية لمدينتي الجبيل وينبع", options: ["التعدينيتين", "الساحليتين", "الصناعيتين", "الزراعيتين"], correct: 2 },
+            { q: "القضية التي ساندها الملك خالد بن عبدالعزيز بصورة خاصة ضمن دعمه للقضايا الإسلامية عامة هي القضية", options: ["الفلسطينية", "الأفغانية", "القبرصية", "البوسنية"], correct: 0 },
+            { q: "ارتبطت مساندة الملك خالد بن عبدالعزيز للقضية الفلسطينية بصورة خاصة بمساندة عامة لـ", options: ["القضايا الإسلامية عامة", "المعاهدات الأوروبية المشتركة", "القضايا التجارية الإقليمية", "الاتفاقيات الاقتصادية الدولية"], correct: 0 },
+            { q: "العام الهجري الذي توفي فيه الملك خالد بن عبدالعزيز هو", options: ["1388هـ", "1395هـ", "1402هـ", "1426هـ"], correct: 2 },
+            { q: "المدينة التي توفي فيها الملك خالد بن عبدالعزيز هي", options: ["الرياض", "جدة", "مكة المكرمة", "الطائف"], correct: 3 },
+            { q: "نُقِل جثمان الملك خالد بن عبدالعزيز بعد وفاته في الطائف إلى مدينة", options: ["مكة المكرمة", "الرياض", "المدينة المنورة", "الأحساء"], correct: 1 },
+            { q: "اسم المقبرة التي دُفِن فيها الملك خالد بن عبدالعزيز في مدينة الرياض هو مقبرة", options: ["العود", "النسيم", "المنصورية", "البقيع"], correct: 0 },
+            { q: "تولى الحكم بعد وفاة الملك خالد بن عبدالعزيز", options: ["الأمير عبدالله بن عبدالعزيز", "الأمير سلطان بن عبدالعزيز", "ولي عهده الأمير فهد بن عبدالعزيز", "الأمير نايف بن عبدالعزيز"], correct: 2 },
+            { q: "الصفة الرسمية التي كان يحملها الأمير فهد بن عبدالعزيز قبل توليه الحكم بعد الملك خالد بن عبدالعزيز هي", options: ["وزير الخارجية", "ولي العهد", "رئيس مجلس الشورى", "النائب الثاني لرئيس مجلس الوزراء"], correct: 1 },
+            { q: "المدينة التي وُلِد فيها الملك فهد بن عبدالعزيز هي", options: ["مكة المكرمة", "جدة", "الرياض", "الطائف"], correct: 2 },
+            { q: "العام الهجري الذي وُلِد فيه الملك فهد بن عبدالعزيز هو", options: ["1319هـ", "1324هـ", "1331هـ", "1340هـ"], correct: 3 },
+            { q: "العلوم التي حرص والده على تعليمه إياها هي العلوم الشرعية والعلوم", options: ["الاجتماعية", "الطبيعية", "العسكرية", "الاقتصادية"], correct: 0 },
+            { q: "المعهد الذي درس فيه الملك فهد بن عبدالعزيز بمكة المكرمة هو", options: ["معهد الإدارة العامة", "المعهد العلمي السعودي", "معهد العاصمة النموذجي", "المعهد الدبلوماسي"], correct: 1 },
+            { q: "المدينة التي يقع فيها المعهد العلمي السعودي الذي درس فيه الملك فهد بن عبدالعزيز هي", options: ["الرياض", "المدينة المنورة", "مكة المكرمة", "جدة"], correct: 2 },
+            { q: "اللقب التعليمي الذي يُعَدّ به الملك فهد بن عبدالعزيز نظير جهوده في تطوير التعليم بجميع مراحله هو", options: ["رائد النهضة التعليمية الحديثة", "مؤسس الجامعات السعودية", "عميد التعليم العام", "باعث النهضة الفكرية"], correct: 0 },
+            { q: "شمل تطوير التعليم في عهد الملك فهد بن عبدالعزيز جميع المراحل لـ", options: ["البنين فقط", "البنات فقط", "البنين وللبنات", "التعليم الجامعي فقط"], correct: 2 },
+            { q: "المستوى الزراعي الذي وصلت إليه المملكة العربية السعودية في عهد الملك فهد بن عبدالعزيز في كثير من المنتجات الزراعية هو", options: ["الاكتفاء الذاتي", "التصدير الشامل", "التراجع المؤقت", "الاعتماد على الاستيراد"], correct: 0 },
+            { q: "الإجراء التنظيمي الذي اتخذه الملك فهد بن عبدالعزيز لتطوير أجهزة الدولة الإدارية يتمثل في", options: ["إلغاء الوزارات السابقة", "إصدار عدد من الأنظمة الإدارية", "تجميد الوظائف العامة", "تقليص الدوائر الحكومية"], correct: 1 },
+            { q: "الوصف التاريخي الذي تميزت به توسعة الحرمين الشريفين وعمارتهما وتطويرهما في عهد الملك فهد بن عبدالعزيز هو أنها", options: ["أول توسعة في العهد السعودي", "أكبر توسعة تاريخية لهما", "توسعة مقتصرة على المسجد الحرام", "التوسعة الهندسية المحدودة"], correct: 1 },
+            { q: "المجمع القرآني الذي أنشأه الملك فهد بن عبدالعزيز لخدمة كتاب الله هو", options: ["مجمع الملك فهد لطباعة المصحف الشريف", "مجمع الملك فهد لتحفيظ القرآن", "مجمع البحوث الإسلامية والقرآنية", "المركز الوطني لعلوم القرآن"], correct: 0 },
+            { q: "المدينة التي أُنشئ فيها مجمع الملك فهد لطباعة المصحف الشريف هي", options: ["مكة المكرمة", "المدينة المنورة", "الرياض", "جدة"], correct: 1 },
+            { q: "مثّل الأمير فهد بن عبدالعزيز المملكة العربية السعودية قبل توليه الحكم في عدد من", options: ["المؤتمرات الإفريقية", "الأحلاف الدولية", "مؤتمرات القمة العربية", "المحاكم الدولية"], correct: 2 },
+            { q: "أول وزير لوزارة المعارف عند تأسيسها سنة 1373هـ في عهد الملك سعود هو الأمير", options: ["فيصل بن عبدالعزيز", "خالد بن عبدالعزيز", "فهد بن عبدالعزيز", "سلطان بن عبدالعزيز"], correct: 2 },
+            { q: "تولى الأمير فهد بن عبدالعزيز وزارة المعارف في عهد الملك", options: ["عبدالعزيز", "سعود", "فيصل", "خالد"], correct: 1 },
+            { q: "الوزارة التي عُيّن فيها الملك فهد بن عبدالعزيز بعد شغله منصب وزير المعارف هي وزارة", options: ["الخارجية", "الدفاع", "الداخلية", "المواصلات"], correct: 2 },
+            { q: "المنصب الإداري والقيادي الذي عُيّن فيه الأمير فهد بن عبدالعزيز بمجلس الوزراء قبل ولاية العهد هو", options: ["رئيس ديوان الرئاسة", "نائباً أول لرئيس مجلس الوزراء", "الأمين العام للمجلس", "المستشار الخاص لرئيس المجلس"], correct: 1 },
+            { q: "المناصب التي عُيّن فيها الأمير فهد بن عبدالعزيز في عهد أخيه الملك خالد هي", options: ["رئيساً لمجلس الشورى ووزيراً للخارجية", "ولياً للعهد، ونائباً لرئيس مجلس الوزراء", "وزيراً للمالية ورئيساً للحرس الوطني", "نائباً للقائد الأعلى وحاكماً للوسطى"], correct: 1 },
+            { q: "اللقب الرسمي الذي اتخذه الملك فهد بن عبدالعزيز بديلاً من لقب (صاحب الجلالة) هو", options: ["خادم الحرمين الشريفين", "قائد المسيرة", "الإمام العادل", "الفيصل المعظم"], correct: 0 },
+            { q: "التاريخ الدقيق الذي اتخذ فيه الملك فهد بن عبدالعزيز لقب (خادم الحرمين الشريفين) بديلاً من لقب (صاحب الجلالة) هو", options: ["1373/1/1هـ", "1402/8/21هـ", "1407/2/27هـ", "1426/6/25هـ"], correct: 2 }
+        ];
+
+        var originalCardsData = JSON.parse(JSON.stringify(rawCardsData));
+        var cardsData = JSON.parse(JSON.stringify(rawCardsData));
+        var letters = ["أ", "ب", "ج", "د"];
+        var currentIndex = 0, score = 0, answersState = {};
+
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false, penActive = false, penColor = '#d4af37', penSize = 2.5, lastX = 0, lastY = 0;
+
+        function resizeCanvas() {
+            const wrapper = document.getElementById('quiz-app-wrapper');
+            canvas.width = wrapper.offsetWidth;
+            canvas.height = wrapper.offsetHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', resizeCanvas);
+
+        function startQuizFromCover() {
+            document.getElementById('cover-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'block';
+            currentIndex = 0; render();
+        }
+
+        function togglePen() {
+            penActive = !penActive;
+            const btn = document.getElementById('penToggleBtn');
+            const toolbar = document.getElementById('penToolbar');
+            if (penActive) {
+                canvas.classList.add('drawing-active');
+                btn.classList.add('active');
+                btn.innerHTML = "✏️ إيقاف القلم";
+                toolbar.style.display = "flex";
+            } else {
+                canvas.classList.remove('drawing-active');
+                btn.classList.remove('active');
+                btn.innerHTML = "✏️ قلم الشرح الحقيقي";
+                toolbar.style.display = "none";
+            }
+        }
+
+        function setPenColor(color, element) { 
+            penColor = color; 
+            document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
+        }
+
+        canvas.addEventListener('mousedown', (e) => { if(!penActive)return; isDrawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; });
+        canvas.addEventListener('mousemove', (e) => { if(!isDrawing||!penActive)return; const p=getPos(e); ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.strokeStyle=penColor; ctx.lineWidth=penSize; ctx.lineCap='round'; ctx.stroke(); lastX=p.x; lastY=p.y; });
+        canvas.addEventListener('mouseup', () => isDrawing=false);
+
+        function render() {
+            document.getElementById('cover-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'block';
+
+            if (cardsData.length === 0) { showResult(); return; }
+            if (currentIndex >= cardsData.length) currentIndex = cardsData.length - 1;
+
+            var item = cardsData[currentIndex];
+            document.getElementById("q-badge").innerText = "السؤال " + (currentIndex + 1);
+            document.getElementById("q-text").innerText = item.q;
+            document.getElementById("question-count").innerText = "السؤال " + (currentIndex + 1) + " من " + cardsData.length;
+            document.getElementById("total-q-badge").innerText = cardsData.length;
+            document.getElementById("progressBar").style.width = ((currentIndex + 1) / cardsData.length * 100) + "%";
+
+            var container = document.getElementById("options-container");
+            container.innerHTML = "";
+            var hasAnswered = answersState.hasOwnProperty(currentIndex);
+
+            for (var idx = 0; idx < item.options.length; idx++) {
+                (function(i) {
+                    var btn = document.createElement("button");
+                    btn.className = "opt-btn";
+                    var checkHtml = (hasAnswered && i === item.correct) ? '<span class="check-mark">✔</span>' : '';
+                    btn.innerHTML = '<span class="opt-text">' + item.options[i] + '</span>' + checkHtml + '<span class="opt-letter">' + letters[i] + '</span>';
+                    if (hasAnswered) {
+                        btn.disabled = true;
+                        if (i === item.correct) btn.className += " correct";
+                        else if (i === answersState[currentIndex]) btn.className += " wrong";
+                    } else {
+                        btn.onclick = function() { selectOption(i); };
+                    }
+                    container.appendChild(btn);
+                })(idx);
+            }
+            resizeCanvas();
+        }
+
+        function selectOption(selectedIndex) {
+            if (answersState.hasOwnProperty(currentIndex)) return;
+            answersState[currentIndex] = selectedIndex;
+            var item = cardsData[currentIndex];
+            if (selectedIndex === item.correct) {
+                score++;
+                document.getElementById("score-count").innerText = "النقاط: " + score;
+            }
+            render();
+        }
+
+        function resetCurrentAnswer() {
+            if (answersState.hasOwnProperty(currentIndex)) {
+                if (answersState[currentIndex] === cardsData[currentIndex].correct) {
+                    score = Math.max(0, score - 1);
+                    document.getElementById("score-count").innerText = "النقاط: " + score;
+                }
+                delete answersState[currentIndex];
+                render();
+            }
+        }
+
+        function deleteCurrentQuestion() {
+            if (confirm("هل أنت متأكد من حذف هذا السؤال؟")) {
+                cardsData.splice(currentIndex, 1);
+                delete answersState[currentIndex];
+                clearCanvas();
+                if (currentIndex >= cardsData.length && currentIndex > 0) currentIndex--;
+                render();
+            }
+        }
+
+        function openEditModal() {
+            var item = cardsData[currentIndex];
+            document.getElementById('editQText').value = item.q;
+            document.getElementById('editOpt0').value = item.options[0] || '';
+            document.getElementById('editOpt1').value = item.options[1] || '';
+            document.getElementById('editOpt2').value = item.options[2] || '';
+            document.getElementById('editOpt3').value = item.options[3] || '';
+            document.getElementById('editCorrectIndex').value = item.correct + 1;
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+
+        function saveEditedQuestion() {
+            cardsData[currentIndex].q = document.getElementById('editQText').value.trim();
+            cardsData[currentIndex].options = [
+                document.getElementById('editOpt0').value.trim(),
+                document.getElementById('editOpt1').value.trim(),
+                document.getElementById('editOpt2').value.trim(),
+                document.getElementById('editOpt3').value.trim()
+            ];
+            cardsData[currentIndex].correct = parseInt(document.getElementById('editCorrectIndex').value) - 1;
+            closeEditModal();
+            render();
+        }
+
+        function nextQ() { if (currentIndex < cardsData.length - 1) { currentIndex++; clearCanvas(); render(); } else { showResult(); } }
+        function prevQ() { if (currentIndex > 0) { currentIndex--; clearCanvas(); render(); } else { document.getElementById('quiz-screen').style.display = 'none'; document.getElementById('cover-screen').style.display = 'flex'; } }
+        function showResult() { document.getElementById("quiz-screen").style.display = "none"; document.getElementById("result-screen").style.display = "block"; document.getElementById("final-score").innerText = score + " / " + cardsData.length; }
+        function restartQuiz() { cardsData = JSON.parse(JSON.stringify(originalCardsData)); currentIndex = 0; score = 0; answersState = {}; clearCanvas(); document.getElementById("score-count").innerText = "النقاط: 0"; document.getElementById("result-screen").style.display = "none"; document.getElementById("cover-screen").style.display = "flex"; }
+        
+        function saveModifiedFile() {
+            var blob = new Blob([document.documentElement.outerHTML], { type: "text/html;charset=utf-8" });
+            var a = document.createElement("a"); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = "kings_of_saudi_arabia_quiz.html"; 
+            a.click();
+        }
+
+        function exportImage() {
+            html2canvas(document.getElementById('quiz-app')).then(canvas => {
+                var a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'kings_of_saudi_arabia_slide.png';
+                a.click();
+            });
+        }
+    </script>
+</body>
+</html>
