@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موسوعة التاريخ المصري الحديث والمعاصر (100 سؤال)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&amp;display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+        body { 
+            background-color: #06152d; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 15px; 
+            color: #fff;
+        }
+
+        .main-controls { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            margin-bottom: 15px; 
+            background: #08162e; 
+            padding: 8px 18px; 
+            border-radius: 50px; 
+            border: 1px solid #d4af37; 
+            justify-content: center; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+            z-index: 1000; 
+            align-items: center; 
+        }
+        .btn-ctrl { 
+            border: none; 
+            padding: 7px 15px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            color: #ffffff; 
+            transition: all 0.2s ease; 
+        }
+        .btn-nav { background: #0066b2; } 
+        .btn-show-ans { background: #10b981; }
+        .btn-pen { background: #b45309; } 
+        .btn-pen.active { background: #d97706; border: 2px solid #fff; }
+        .btn-copy-img { background: #059669; }
+        .btn-pdf { background: #0284c7; } 
+        .btn-img { background: #2563eb; } 
+        .btn-export-all { background: #7c3aed; }
+        .btn-save-file { background: #d97706; }
+        .btn-edit-q { background: #0891b2; }
+        .btn-delete-q { background: #dc2626; }
+        .btn-share-tg { background: #229ed9; }
+        .btn-share-wa { background: #25d366; }
+
+        .pen-toolbar { 
+            display: none; 
+            gap: 12px; 
+            margin-bottom: 15px; 
+            background: #111d38; 
+            padding: 8px 22px; 
+            border-radius: 30px; 
+            border: 1.5px solid #10b981; 
+            align-items: center; 
+            z-index: 1000; 
+        }
+        .color-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
+        .color-dot.selected { transform: scale(1.25); border-color: #d4af37; }
+        .btn-clear-canvas { background: #ef4444; color: white; border: none; padding: 5px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px; }
+
+        #quiz-app-wrapper { 
+            position: relative; 
+            width: 100%; 
+            max-width: 480px; 
+            aspect-ratio: 1 / 1.05; 
+        }
+
+        #drawCanvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            pointer-events: none; 
+            z-index: 500; 
+            touch-action: none; 
+        }
+        #drawCanvas.drawing-active { pointer-events: auto; cursor: crosshair; }
+
+        .slide-card {
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
+            border-radius: 2px;
+            direction: rtl;
+        }
+
+        .top-bar {
+            background: #005a9c;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 18px;
+            white-space: nowrap;
+        }
+
+        .top-right-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .top-left-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.15;
+        }
+
+        .top-left-title {
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .top-left-counter {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fce181;
+            direction: ltr;
+        }
+
+        .content-section {
+            background-color: #ffffff;
+            flex: 1;
+            position: relative;
+            padding: 15px 20px 12px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+        }
+
+        .watermark-img {
+            position: absolute;
+            top: 52%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-8deg);
+            font-size: 42px;
+            font-weight: 900;
+            color: rgba(180, 160, 120, 0.12);
+            pointer-events: none;
+            user-select: none;
+            white-space: nowrap;
+            z-index: 1;
+        }
+
+        .q-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2;
+            width: 100%;
+        }
+
+        .q-label {
+            color: #005a9c;
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .q-icon-circle {
+            width: 44px;
+            height: 44px;
+            background: #93c5fd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e3a8a;
+            font-size: 26px;
+            font-weight: 900;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .q-content {
+            color: #005a9c;
+            font-size: 17px;
+            font-weight: 900;
+            line-height: 1.4;
+            z-index: 2;
+            margin: auto 0;
+            width: 100%;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .answer-box {
+            width: 100%;
+            background-color: #ffffff;
+            border: 2px dashed #005a9c;
+            border-radius: 12px;
+            padding: 10px;
+            z-index: 2;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .answer-box:hover {
+            background-color: #f0f7fc;
+        }
+
+        .answer-header {
+            font-size: 12px;
+            font-weight: 900;
+            color: #005a9c;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .answer-content {
+            font-size: 15px;
+            font-weight: 900;
+            color: #047857;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .answer-content.hidden {
+            filter: blur(10px);
+            opacity: 0.15;
+            user-select: none;
+        }
+
+        .middle-bar {
+            background: #005a9c;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 18px;
+            font-size: 15px;
+            font-weight: 900;
+            border-top: 2px solid #003366;
+            border-bottom: 2px solid #003366;
+        }
+
+        .middle-bar span:first-child { color: #fce181; }
+        .middle-bar span:last-child { color: #fce181; }
+
+        .bottom-contact-bar {
+            background: #004070;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            font-weight: 900;
+            gap: 4px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .contact-item span { direction: ltr; }
+
+        .contact-item svg {
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            padding: 2px;
+            flex-shrink: 0;
+            border: 1px solid #d4af37;
+        }
+
+        .modal-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 2000; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+        }
+        .modal-content { 
+            background: #08162e; 
+            border: 2px solid #d4af37; 
+            border-radius: 18px; 
+            width: 100%; 
+            max-width: 550px; 
+            padding: 22px; 
+            color: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+        .modal-title { font-size: 19px; font-weight: 900; color: #d4af37; text-align: center; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 13px; font-weight: 800; color: #cbd5e1; }
+        .form-group textarea { 
+            background: #051329; 
+            border: 1.5px solid #0b68a8; 
+            border-radius: 8px; 
+            padding: 9px; 
+            color: #fff; 
+            font-size: 14px; 
+            font-family: 'Cairo', sans-serif; 
+        }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+        .btn-modal-save { background: #10b981; color: white; border: none; padding: 8px 20px; border-radius: 10px; font-weight: 900; cursor: pointer; }
+        .btn-modal-cancel { background: #64748b; color: white; border: none; padding: 8px 20px; border-radius: 10px; font-weight: 900; cursor: pointer; }
+
+        @media print {
+            body { background: none; padding: 0; display: block !important; }
+            .main-controls, .pen-toolbar, #drawCanvas { display: none !important; }
+            #quiz-app-wrapper { display: none !important; }
+            .print-all-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+                gap: 15px;
+                width: 100%;
+            }
+            .print-card-item {
+                border: 1.5px solid #005a9c;
+                border-radius: 10px;
+                padding: 10px;
+                background: #fff;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                height: 220px;
+            }
+        }
+        .print-all-grid { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="main-controls">
+        <button class="btn-ctrl btn-nav" onclick="prevSlide()">➔ السابق</button>
+        <button class="btn-ctrl btn-show-ans" id="btnToggleAns" onclick="toggleAnswer()">🙈 إخفاء الإجابة</button>
+        <button class="btn-ctrl btn-pen" id="penToggleBtn" onclick="togglePen()">✏️ قلم الشرح</button>
+        <button class="btn-ctrl btn-nav" onclick="nextSlide()">التالي ⬅</button>
+        <div style="width:1px; height:20px; background:#d4af37;"></div>
+        <button class="btn-ctrl btn-share-wa" onclick="shareWhatsAppText()">💬 مشاركة واتساب (نص)</button>
+        <button class="btn-ctrl btn-share-tg" onclick="shareTelegramText()">📢 مشاركة تلجرام (نص)</button>
+        <div style="width:1px; height:20px; background:#d4af37;"></div>
+        <button class="btn-ctrl btn-copy-img" id="btnCopyImg" onclick="copySlideImage()">📋 نسخ الصورة</button>
+        <button class="btn-ctrl btn-img" onclick="exportSlideImage()">🖼️ تصدير PNG</button>
+        <button class="btn-ctrl btn-export-all" onclick="exportAllCardsImages()">📥 تصدير الكل كصور</button>
+        <button class="btn-ctrl btn-pdf" onclick="exportAllCardsPDF()">📄 تصدير الكل PDF (4 بطاقات بالصفحة)</button>
+        <button class="btn-ctrl btn-save-file" onclick="saveModifiedFile()">💾 حفظ التعديلات</button>
+        <button class="btn-ctrl btn-edit-q" onclick="openEditModal()">✏️ تعديل</button>
+        <button class="btn-ctrl btn-delete-q" onclick="deleteSlide()">❌ حذف</button>
+    </div>
+
+    <div class="pen-toolbar" id="penToolbar">
+        <span style="color:#d4af37; font-weight:bold; font-size:13px;">الألوان:</span>
+        <span class="color-dot selected" style="background: #e11d48;" onclick="setPenColor('#e11d48', this)"></span>
+        <span class="color-dot" style="background: #d4af37;" onclick="setPenColor('#d4af37', this)"></span>
+        <span class="color-dot" style="background: #2563eb;" onclick="setPenColor('#2563eb', this)"></span>
+        <span class="color-dot" style="background: #16a34a;" onclick="setPenColor('#16a34a', this)"></span>
+        <button class="btn-clear-canvas" onclick="clearCanvas()">🗑️ مسح الخطوط</button>
+    </div>
+
+    <div id="quiz-app-wrapper">
+        <canvas id="drawCanvas" width="480" height="504"></canvas>
+        <div class="slide-card" id="slideCard">
+            
+            <div class="top-bar">
+                <span class="top-right-title">التاريخ المصري الحديث والمعاصر</span>
+                <div class="top-left-group">
+                    <span class="top-left-title">بنك الأسئلة الشامل</span>
+                    <span class="top-left-counter">(<span id="slide-num">1</span> / <span id="total-slides">0</span>)</span>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <div class="watermark-img">إبراهيم أبوزيد</div>
+                
+                <div class="q-header-row">
+                    <div class="q-label">السؤال (<span id="q-number-tag">1</span>):</div>
+                    <div class="q-icon-circle">🇪🇬</div>
+                </div>
+
+                <div class="q-content" id="questionText"></div>
+
+                <div class="answer-box" onclick="toggleAnswer()">
+                    <div class="answer-header">
+                        <span>✔ الإجابة النموذجية</span>
+                        <span style="font-size: 10px; color: #555; font-weight: normal;">(اضغط للإظهار/الإخفاء)</span>
+                    </div>
+                    <div class="answer-content" id="answerText"></div>
+                </div>
+            </div>
+
+            <div class="middle-bar">
+                <span>إعداد: إبراهيم أبوزيد | معلّم ومدرب وباحث</span>
+                <span>تاريخ مصر الحديث</span>
+            </div>
+
+            <div class="bottom-contact-bar">
+                <div class="contact-item">
+                    <span>01098280895</span>
+                    <svg viewBox="0 0 24 24" fill="#10B981">
+                        <path d="M6.6 10.8c1.3 2.5 3.3 4.5 5.8 5.8l2-2c.3-.3.8-.4 1.1-.2 1.2.4 2.6.6 4 .6.6 0 1 .4 1 1V21c0 .6-.4 1-1 1-10.5 0-19-8.5-19-19 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.4.2 2.8.6 4 .2.3.1.8-.2 1.1l-2 2z"></path>
+                    </svg>
+                </div>
+                <div class="contact-item">
+                    <span>01098280895</span>
+                    <svg viewBox="0 0 24 24" fill="#25D366">
+                        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m0 1.77c2.19 0 4.24.85 5.78 2.39a8.15 8.15 0 0 1 2.39 5.78c0 4.51-3.67 8.18-8.18 8.18-1.54 0-3.02-.42-4.32-1.22l-.31-.19-3.21.84.85-3.13-.2-.32a8.11 8.11 0 0 1-1.25-4.38c0-4.51 3.67-8.18 8.18-8.18m4.51 10.25c-.25-.13-1.47-.72-1.69-.8-.23-.08-.4-.13-.57.13-.17.25-.66.8-.81.97-.15.17-.3.19-.55.06-.25-.13-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.15-.25-.02-.39.11-.52.12-.12.25-.3.38-.45.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.38-.78-1.89-.2-.5-.41-.43-.57-.44h-.49c-.17 0-.45.06-.69.32-.24.25-.92.9-.92 2.2 0 1.3 0.94 2.56 1.07 2.74.13.17 1.85 2.82 4.48 3.96.63.27 1.12.43 1.5.55.63.2 1.2.17 1.65.1.5-.08 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.29z"></path>
+                    </svg>
+                </div>
+                <div class="contact-item">
+                    <span>t.me/myibhistoricy</span>
+                    <svg viewBox="0 0 24 24" fill="#229ED9">
+                        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m5.2 6.8l-1.8 8.6c-.1.6-.5.8-1 .5l-2.8-2.1-1.3 1.3c-.1.1-.3.3-.5.3l.2-2.9 5.3-4.8c.2-.2-.1-.3-.4-.1l-6.5 4.1-2.8-.9c-.6-.2-.6-.6.1-.8l11-4.2c.5-.2 1 .1.8.8z"></path>
+                    </svg>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="print-all-grid" id="printAllGrid"></div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-title">✏️ تعديل السؤال والإجابة الحالية</div>
+            <div class="form-group">
+                <label>نص السؤال:</label>
+                <textarea id="editQText" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label>نص الإجابة النموذجية:</label>
+                <textarea id="editAnsText" rows="3"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-modal-cancel" onclick="closeEditModal()">إلغاء</button>
+                <button class="btn-modal-save" onclick="saveEditedQuestion()">حفظ التعديل</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 100 سؤال شاملة عن التاريخ المصري الحديث والمعاصر بخيارات دقيقة
+        var rawCardsData = [
+            { q: "في أي عام هبطت الحملة الفرنسية بقيادة نابليون بونابرت على شواطئ الإسكندرية؟", options: ["1798 م", "1789 م", "1801 م", "1799 م"], correct: 0 },
+            { q: "ما هو الحي الذي قاد حركة المقاومة ضد الفرنسيين في ثورة القاهرة الأولى؟", options: ["حي الأزهر", "حي بولاق", "حي الحسينية", "حي السيدة زينب"], correct: 0 },
+            { q: "من هو قائد المقاومة الشعبية في مدينة عكا الذي أفشل حملة نابليون؟", options: ["أحمد باشا الجزار", "محمد بك الأباضي", "سليمان الحلبي", "عمر مكرم"], correct: 0 },
+            { q: "ما هي المعركة البحرية التي تحطّم فيها الأسطول الفرنسي تماماً على يد الأدميرال نيلسون؟", options: ["معركة أبي قير البحرية", "معركة الأهرام", "معركة التل الكبير", "معركة أبو قير البرية"], correct: 0 },
+            { q: "في أي عام جلاء الحملة الفرنسية عن مصر؟", options: ["1801 م", "1798 م", "1805 م", "1811 م"], correct: 0 },
+            { q: "من هو زعيم الزعامة الشعبية الذي اختاره الشعب والعلماء والياً على مصر عام 1805؟", options: ["السيد عمر مكرم", "الشيخ الشرقاوي", "محمد علي باشا", "الشيخ الجبرتي"], correct: 0 },
+            { q: "ما هو اسم المذبحة التي تخلص فيها محمد علي من المماليك عام 1811؟", options: ["مذبحة القلعة", "مذبحة الإسكندرية", "مذبحة الدلتا", "مذبحة المماليك الكبرى"], correct: 0 },
+            { q: "ما هي أول مدرسة حربية أنشأها محمد علي لإعداد الضباط؟", options: ["مدرسة أسوان", "مدرسة القلعة", "مدرسة الخانكة", "مدرسة الجيزة"], correct: 0 },
+            { q: "في أي عام تمت معاهدة لندن التي حددت القوة العسكرية والسياسية لمحمد علي؟", options: ["1840 م", "1839 م", "1841 م", "1833 م"], correct: 0 },
+            { q: "من هو الخديوي الذي تم في عهده افتتاح قناة السويس رسمياً؟", options: ["الخديوي إسماعيل", "الخديوي توفيق", "السعيد باشا", "عباس حلمي الأول"], correct: 0 },
+            { q: "في أي عام افتتحت قناة السويس للملاحة الدولية؟", options: ["1869 م", "1859 م", "1882 م", "1875 م"], correct: 0 },
+            { q: "من هو المهندس الفرنسي الذي صمم وأشرف على حفر قناة السويس؟", options: ["فرديناند ديليسبس", "نابليون الثالث", "شامبليون", "جول فيرن"], correct: 0 },
+            { q: "من هو الخديوي الذي عزل بسبب الأزمة المالية والتدخل الأجنبي عام 1879؟", options: ["الخديوي إسماعيل", "الخديوي توفيق", "عباس حلمي الثاني", "حسين كامل"], correct: 0 },
+            { q: "ما هو النظام الاقتصادي الذي ألغاه محمد علي ليحتكر تجارة الصادرات والواردات؟", options: ["نظام الاحتكار", "نظام الإقطاع", "نظام الالتزام", "نظام الطوائف الحرفية"], correct: 0 },
+            { q: "ماذا يسمى الإقليم الإفريقي الذي وسع محمد علي نفوذه نحوه مؤسساً مدينة الخرطوم؟", options: ["السودان", "الحبشة", "الشام", "المغرب"], correct: 0 },
+            { q: "في أي عام وقعت معركة تل الكبير التي مهدت للاحتلال البريطاني لمصر؟", options: ["1882 م", "1879 م", "1884 م", "1899 م"], correct: 0 },
+            { q: "من هو الزعيم الوطني الذي تزعم الثورة العرابية ووقف أمام الخديوي توفيق؟", options: ["أحمد عرابي", "محمود سامي البارودي", "مصطفى كامل", "سعد زغلول"], correct: 0 },
+            { q: "ما هي المعركة التي أبلى فيها أحمد عرابي بلاء حسناً قبل احتلال القناة؟", options: ["معركة كفر الدوار", "معركة التل الكبير", "معركة الإسكندرية", "معركة شبراخيت"], correct: 0 },
+            { q: "من هو المعتمد البريطاني الأول (المندوب السامي) في مصر بعد الاحتلال؟", options: ["اللورد كرومر", "اللورد أللنبي", "اللورد لويد", "غورست"], correct: 0 },
+            { q: "ماذا كانت تسمى حادثة عام 1906 التي أعدم فيها عدد من الفلاحين الأبرياء في المنوفية؟", options: ["حادثة دنشواي", "حادثة الإسماعيلية", "حادثة عابدين", "حادثة الفاشر"], correct: 0 },
+            { q: "من هو الزعيم الوطني صاحب مقولة لا تحاربوا الإنجليز بالسلاح بل بالتعليم؟", options: ["مصطفى كامل", "محمد فريد", "سعد زغلول", "قاسم أمين"], correct: 0 },
+            { q: "من هو مؤسس جريدة الأهرام العريقة عام 1875؟", options: ["الشقيقان تقلا", "يعقوب صنوع", "عبد الله النديم", "الشيخ محمد عبده"], correct: 0 },
+            { q: "في أي عام قامت ثورة 1919 بقيادة سعد زغلول؟", options: ["1919 م", "1914 م", "1922 م", "1923 م"], correct: 0 },
+            { q: "ما هو اسم الوفد الذي ترأسه سعد زغلول للسفر إلى مؤتمر الصلح بباريس؟", options: ["الوفد المصري", "وفد مصر", "لجنة ملنر", "مجلس شورى النواب"], correct: 0 },
+            { q: "إلى أي جزيرة تم نفي سعد زغلول ورفاقه للمرة الأولى عام 1919؟", options: ["جزيرة مالطا", "جزيرة سيشل", "جزيرة رودس", "جزيرة كريت"], correct: 0 },
+            { q: "إلى أين تم نفي سعد زغلول في المرة الثانية عام 1921؟", options: ["جزيرة سيشل", "جزيرة مالطا", "قبرص", "سيلان"], correct: 0 },
+            { q: "ما هو النص الأبرز في تصريح 28 فبراير 1922 بالنسبة لمصر؟", options: ["إنهاء الحماية البريطانية وإعلان مصر دولة مستقلة ذات سيادة", "جلاء القوات البريطانية بالكامل", "إلغاء الأحكام العرفية", "تأسيس البرلمان المصري"], correct: 0 },
+            { q: "من هو الملك الذي أعلن ملكاً على مصر بعد تصريح 1922 وإلغاء السلطنة؟", options: ["الملك فؤاد الأول", "الملك فاروق", "الملك أحمد فؤاد الثاني", "الخديوي إسماعيل"], correct: 0 },
+            { q: "في أي عام صدر أول دستور مصري (دستور 1923)؟", options: ["1923 م", "1922 م", "1930 م", "1956 م"], correct: 0 },
+            { q: "من هو الزعيم الوطني الذي أسس حزب الوفد؟", options: ["سعد زغلول", "مصطفى النحاس", "عدلي يكن", "لطفي السيد"], correct: 0 },
+            { q: "من هو رئيس الوزراء المصري الذي اغتيل على يد وطني مصري عام 1910؟", options: ["بطرس غالي باشا", "محمد محمود باشا", "إبراهيم باشا فكري", "يوسف وهبة باشا"], correct: 0 },
+            { q: "ما هي المعاهدة التي وقعت عام 1936 بين مصر وبريطانيا؟", options: ["معاهدة 1936", "معاهدة لندن", "معاهدة براند", "معاهدة الجلاء"], correct: 0 },
+            { q: "متى ألغت حكومة النحاس باشا معاهدة 1936 من طرف واحد؟", options: ["أكتوبر 1951", "يناير 1952", "يوليو 1952", "فبراير 1950"], correct: 0 },
+            { q: "ما هي المعركة الشهيرة التي خاضتها الشرطة المصرية ضد الاحتلال في الإسكندرية عام 1952؟", options: ["معركة الإسماعيلية", "موقعة بورسعيد", "معركة التل الكبير", "معركة العريش"], correct: 0 },
+            { q: "في أي تاريخ وقع حريق القاهرة الشهير؟", options: ["26 يناير 1952", "23 يوليو 1952", "25 يناير 1952", "18 يناير 1977"], correct: 0 },
+            { q: "في أي عام قامت ثورة 23 يوليو بقيادة الضباط الأحرار؟", options: ["1952 م", "1953 م", "1956 م", "1948 م"], correct: 0 },
+            { q: "من هو اللواء الذي أُعلن اسماً لواجهة ثورة يوليو وقام بإذاعة بيانها؟", options: ["محمد نجيب", "جمال عبد الناصر", "أنور السادات", "عبد الحكيم عامر"], correct: 0 },
+            { q: "من هو مؤسس تنظيم الضباط الأحرار وقائد الثورة الفعلي؟", options: ["جمال عبد الناصر", "محمد نجيب", "زكريا محيي الدين", "عبد الحكيم عامر"], correct: 0 },
+            { q: "في أي عام تم إعلان الجمهورية وإلغاء الملكية في مصر؟", options: ["1953 م", "1952 م", "1956 م", "1958 م"], correct: 0 },
+            { q: "من هو أول رئيس لجمهورية مصر العربية بعد إلغاء الملكية؟", options: ["محمد نجيب", "جمال عبد الناصر", "أنور السادات", "محمد حسني مبارك"], correct: 0 },
+            { q: "ما هو القانون الاجتماعي الهام الذي أصدره جمال عبد الناصر في سبتمبر 1952؟", options: ["قانون الإصلاح الزراعي الأول", "قانون التأمينات الاجتماعية", "قانون مجانية التعليم", "قانون العمل الموحد"], correct: 0 },
+            { q: "في أي عام تم توقيع اتفاقية الجلاء البريطاني عن مصر؟", options: ["1954 م", "1952 م", "1956 م", "1950 م"], correct: 0 },
+            { q: "متى تم تأميم شركة قناة السويس البحرية؟", options: ["26 يوليو 1956", "23 يوليو 1952", "18 يونيو 1953", "29 أكتوبر 1956"], correct: 0 },
+            { q: "ما هو العدوان الثلاثي الذي تعرضت له مصر عام 1956؟", options: ["هجوم بريطاني فرنسي إسرائيلي", "هجوم أمريكي بريطاني فرنسي", "غزو تركي إيطالي إنجليزي", "حصار بحري أطلسي"], correct: 0 },
+            { q: "ما هي الدول الثلاث التي شاركت في العدوان الثلاثي على مصر؟", options: ["بريطانيا وفرنسا وإسرائيل", "أمريكا وبريطانيا وفرنسا", "إسرائيل وألمانيا وإيطاليا", "بريطانيا وبلجيكا وفرنسا"], correct: 0 },
+            { q: "ما هي المنظمة العربية التي تأسست عام 1958 بين مصر وسوريا؟", options: ["الجمهورية العربية المتحدة", "جامعة الدول العربية", "الاتحاد العربي الهاشمي", "مجلس التعاون العربي"], correct: 0 },
+            { q: "في أي عام انفصلت سوريا عن الوحدة مع مصر؟", options: ["1961 م", "1959 م", "1963 م", "1967 م"], correct: 0 },
+            { q: "ما هي الحرب التي خاضتها مصر عام 1967 وعرفت بـ النكسة؟", options: ["حرب يونيو 1967", "حرب الاستنزاف", "حرب أكتوبر 1973", "حرب اليمن"], correct: 0 },
+            { q: "ماذا تسمى الفترة العسكرية التي تلت حرب 1967 وشهدت مناوشات مستمرة مع إسرائيل؟", options: ["حرب الاستنزاف", "حرب العبور", "حرب الاستقلال الثاني", "حرب المناورات"], correct: 0 },
+            { q: "من هو صاحب المبادرة الشهيرة لوقف إطلاق النار في حرب الاستنزاف عام 1970؟", options: ["ويليام روجرز", "هنري كيسنجر", "جيمي كارتر", "يو ثانت"], correct: 0 },
+            { q: "في أي عام توفي الرئيس جمال عبد الناصر؟", options: ["1970 م", "1967 م", "1973 م", "1981 م"], correct: 0 },
+            { q: "من هو النائب الذي تولى رئاسة مصر بعد رحيل جمال عبد الناصر؟", options: ["محمد أنور السادات", "حسني مبارك", "محمود فوزي", "زكريا محيي الدين"], correct: 0 },
+            { q: "في أي يوم وشهر وعام قامت حرب أكتوبر المجيدة؟", options: ["6 أكتوبر 1973", "5 يونيو 1967", "23 يوليو 1973", "25 أكتوبر 1973"], correct: 0 },
+            { q: "ما هو الرمز التاريخي الذي أطلق على خط الدفاع الإسرائيلي الذي دمره الجيش المصري؟", options: ["خط بارليف", "خط ماجينو", "خط سيغفرايد", "الخط الأخضر"], correct: 0 },
+            { q: "من هو وزير الحربية وقائد عام القوات المسلحة في حرب أكتوبر 1973؟", options: ["المشير أحمد إسماعيل علي", "الفريق سعد الدين الشاذلي", "اللواء عبد الغني الجمسي", "محمد حسني مبارك"], correct: 0 },
+            { q: "من هو رئيس أركان حرب القوات المسلحة المصرية أثناء حرب أكتوبر؟", options: ["الفريق سعد الدين الشاذلي", "المشير أحمد إسماعيل", "اللواء عبد الغني الجمسي", "الفريق محمد عبد الغني الجمسي"], correct: 0 },
+            { q: "متى تم توقيع اتفاقية كامب ديفيد للسلام بين مصر وإسرائيل؟", options: ["سبتمبر 1978", "مارس 1979", "نوفمبر 1977", "جوليو 1976"], correct: 0 },
+            { q: "في أي عام وقعت معاهدة السلام المصرية الإسرائيلية؟", options: ["1979 م", "1978 م", "1982 م", "1989 م"], correct: 0 },
+            { q: "متى استردت مصر آخر جزء من سيناء (مدينة طابا) عبر التحكيم الدولي؟", options: ["مارس 1989", "أبريل 1982", "أكتوبر 1973", "يناير 1980"], correct: 0 },
+            { q: "من هو رئيس الوزراء والسياسي المصري الذي اغتيل في حادث المنصة العسكري عام 1981؟", options: ["الرئيس محمد أنور السادات", "رياض غالي", "مصطفى الفقي", "ممدوح سالم"], correct: 0 },
+            { q: "في أي عام وقع حادث اغتيال الرئيس محمد أنور السادات؟", options: ["1981 م", "1979 م", "1982 م", "1973 م"], correct: 0 },
+            { q: "من هو الرئيس الذي تولى حكم مصر خلفاً للسادات وبقي في السلطة لثلاثة عقود؟", options: ["محمد حسني مبارك", "محمد مرسي", "عدلي منصور", "عبد الفتاح السيسي"], correct: 0 },
+            { q: "ماذا يسمى التمرد الشعبي الذي حدث في مصر يومي 18 و19 يناير 1977؟", options: ["انتفاضة الخبز", "ثورة يناير", "أحداث العباسية", "احتجاجات الغذاء"], correct: 0 },
+            { q: "من هو المفكر المصري الحاصل على جائزة نوبل في الأدب عام 1988؟", options: ["نجيب محفوظ", "توفيق الحكيم", "طه حسين", "عباس العقاد"], correct: 0 },
+            { q: "من هو العالم والدبلوماسي المصري الذي شغل منصب مدير الوكالة الدولية للطاقة الذرية؟", options: ["محمد البرادعي", "أحمد زويل", "فاروق الباز", "مصطفى السيد"], correct: 0 },
+            { q: "ما هو الاسم الحركي الشهير للجاسوس المصري رفعت الهجان في المخابرات المصرية؟", options: ["رأفت الهجان", "جيمس بوند", "عزام عزام", "محمود غنيم"], correct: 0 },
+            { q: "في أي عام تم افتتاح مكتبة الإسكندرية الجديدة بصيغتها الحديثة؟", options: ["2002 م", "1999 م", "2005 م", "1995 م"], correct: 0 },
+            { q: "في أي عام افتتح الخط الأول لمترو الأنفاق بالقاهرة كأول مترو في إفريقيا والشرق الأوسط؟", options: ["1987 م", "1981 م", "1992 م", "1999 م"], correct: 0 },
+            { q: "ما هو التاريخ الذي انطلقت فيه ثورة 25 يناير 2011؟", options: ["25 يناير 2011", "11 فبراير 2011", "30 يونيو 2013", "3 يوليو 2013"], correct: 0 },
+            { q: "في أي ميدان تركزت الاحتجاجات الشعبية الكبرى خلال ثورة 25 يناير؟", options: ["ميدان التحرير", "ميدان رابعة العدوية", "ميدان عابدين", "ميدان مصطفى محمود"], correct: 0 },
+            { q: "في أي تاريخ أعلن الرئيس الأسبق حسني مبارك تنحيه عن السلطة؟", options: ["11 فبراير 2011", "25 يناير 2011", "30 يونيو 2012", "3 يوليو 2013"], correct: 0 },
+            { q: "من هو رئيس المجلس الأعلى للقوات المسلحة الذي أدار شؤون البلاد بعد تنحي مبارك؟", options: ["المشير حسين طنطاوي", "المشير عبد الفتاح السيسي", "الفريق سامي عنان", "اللواء عمر سليمان"], correct: 0 },
+            { q: "من هو أول رئيس مدني منتخب ديمقراطياً بعد ثورة 25 يناير؟", options: ["محمد مرسي", "أحمد شفيق", "حامدي صباحي", "عبد الفتاح السيسي"], correct: 0 },
+            { q: "في أي عام انتخاب محمد مرسي رئيساً للجمهورية؟", options: ["2012 م", "2011 م", "2013 م", "2014 م"], correct: 0 },
+            { q: "متى خرجت المجموعات الشعبية في مظاهرات حاشدة أدت لعزل محمد مرسي؟", options: ["30 يونيو 2013", "25 يناير 2013", "3 يوليو 2012", "11 فبراير 2014"], correct: 0 },
+            { q: "من هو رئيس المحكمة الدستورية العليا الذي تولى إدارة البلاد مؤقتاً بعد 3 يوليو 2013؟", options: ["المستشار عدلي منصور", "المستشار ماهر الجندي", "المستشار فاروق سلطان", "المستشار سعيد مرعي"], correct: 0 },
+            { q: "من هو المشير الذي تولى رئاسة الجمهورية بعد انتخابات عام 2014؟", options: ["عبد الفتاح السيسي", "صدقي صبحي", "حسين طنطاوي", "محمود إبراهيم"], correct: 0 },
+            { q: "ما هو المشروع العملاق الذي دشن عام 2015 لتوسيع المجرى الملاحي لقناة السويس؟", options: ["قناة السويس الجديدة", "محور قناة السويس اللوجستي", "تفريعة الإسماعيلية", "ميناء شرق بورسعيد"], correct: 0 },
+            { q: "ما هو اسم العاصمة الإدارية الجديدة التي بدأ إنشاؤها شرق القاهرة في العصر الحديث؟", options: ["العاصمة الإدارية الجديدة", "مدينة بدر", "مدينة المستقبل", "العلمين الجديدة"], correct: 0 },
+            { q: "في أي عام انطلقت فعاليات مؤتمر المناخ COP27 الذي استضافته مصر في شرم الشيخ؟", options: ["2022 م", "2021 م", "2023 م", "2024 م"], correct: 0 },
+            { q: "ما هي المبادرة الرئاسية الكبرى التي أطلقت لتحسين مستوى المعيشة في القرى المصرية؟", options: ["مبادرة حياة كريمة", "مبادرة التضامن الريفي", "مبادرة قرى مصر", "مبادرة النهضة المصرية"], correct: 0 },
+            { q: "ما هو المعرض الثقافي الدولي السنوي الذي تنظمه مصر وتعد من أكبر معارض الكتب في العالم؟", options: ["معرض القاهرة الدولي للكتاب", "معرض الإسكندرية للكتاب", "معرض الثقافة العربية", "معرض الأقصر الدولي"], correct: 0 },
+            { q: "ما هو المتحف العالمي الكبير الذي جرى الاستعداد لافتتاحه في الجيزة لعرض آثار الحضارة المصرية القديمة؟", options: ["المتحف المصري الكبير", "المتحف القومي للحضارة", "متحف الفن الإسلامي", "متحف الآثار المصرية بالتحرير"], correct: 0 },
+            { q: "من هو مؤسس بنك مصر عام 1920 لدعم الاقتصاد الوطني؟", options: ["طلعت حرب", "محمد بحر الدين", "أحمد عبود باشا", "سمير رءوف"], correct: 0 },
+            { q: "من هي رائدة الحركة النسائية الحديثة وصاحبة صالون أدبي ومؤسسة الاتحاد النسائي؟", options: ["هدى شعراوي", "سدى زغلول", "ملك حفني ناصف", "لطيفة الزيات"], correct: 0 },
+            { q: "من هو رائد المسرح الشعري الحديث في الأدب العربي؟", options: ["أحمد شوقي", "حافظ إبراهيم", "إبراهيم ناجي", "أحمد محرم"], correct: 0 },
+            { q: "ما هو اسم الموسيقار العبقري الذي لحن النشيد الوطني المصري بلادي بلادي؟", options: ["سيد درويش", "محمد عبد الوهاب", "رياض السنباطي", "محمد القصبجي"], correct: 0 },
+            { q: "من هو الموسيقار المصري الملقب بـ موسيقار الأجيال؟", options: ["محمد عبد الوهاب", "بليغ حمدي", "محمد الموجي", "منير مراد"], correct: 0 },
+            { q: "في أي عام تأسست إذاعة القرآن الكريم بالقاهرة؟", options: ["1964 م", "1954 م", "1973 م", "1980 م"], correct: 0 },
+            { q: "من هو أول أمين عام عربي لجامعة الدول العربية؟", options: ["عبد الرحمن عزام", "محمود رياض", "عبد الخالق حسونة", "عمرو موسى"], correct: 0 },
+            { q: "من هي العالمة المصرية التي لُقبت بـ عالمة الذرة وتم اغتيالها في أمريكا عام 1961؟", options: ["سميرة موسى", "فاطمة مرسي", "عائشة عبد الرحمن", "هبة قطب"], correct: 0 },
+            { q: "ما هي المدينة المصرية التي اختارتها اليونسكو كعاصمة للثقافة الإسلامية عام 2006؟", options: ["القاهرة", "الإسكندرية", "أسوان", "الأقصر"], correct: 0 },
+            { q: "ما هو المشروع القومي العملاق للطرق الذي غير خريطة النقل في مصر خلال العقد الثاني؟", options: ["الشبكة القومية للطرق", "شبكة السكك الحديدية السريعة", "محور النقل الإفريقي", "طريق الحرير المصري"], correct: 0 },
+            { q: "ما هي الاتفاقية الاقتصادية الشهيرة التي وقعتها مصر لتسهيل التجارة مع أوروبا عام 2004؟", options: ["اتفاقية الشراكة المصرية الأوروبية", "اتفاقية أغادير", "اتفاقية الكوميسا", "اتفاقية التجارة الحرة المتوسطية"], correct: 0 },
+            { q: "ما هو المشروع الزراعي العملاق لاستصلاح الصحراء الغربية في مصر (توشكى والدلتا الجديدة)؟", options: ["مستقبل مصر وتوشكى", "مشروع تنمية سيناء", "مشروع السد العالي", "مشروع ترعة السلام"], correct: 0 },
+            { q: "من هو رائد الفن التشكيلي المصري الحديث وصاحب تمثال نهضة مصر؟", options: ["محمود مختار", "محمد صبري", "حامد عويس", "صبري راغب"], correct: 0 },
+            { q: "ما هو اللقب الذي أطلق على الصحفي والكاتب التاريخي الراحل محمد حسنين هيكل؟", options: ["مؤرخ العصر الحديث وصحفي السلطة", "شيخ الصحفيين المصريين", "عميد الأدب العربي", "أستاذ الدبلوماسية"], correct: 0 }
+        ];
+
+        var currentIndex = 0;
+        var isAnswerVisible = true;
+
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let penActive = false;
+        let penColor = '#e11d48';
+        let penSize = 3.5;
+        let lastX = 0;
+        let lastY = 0;
+
+        function resizeCanvas() {
+            const wrapper = document.getElementById('quiz-app-wrapper');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(canvas, 0, 0);
+
+            canvas.width = wrapper.offsetWidth;
+            canvas.height = wrapper.offsetHeight;
+            
+            ctx.drawImage(tempCanvas, 0, 0);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', resizeCanvas);
+
+        function togglePen() {
+            penActive = !penActive;
+            const btn = document.getElementById('penToggleBtn');
+            const toolbar = document.getElementById('penToolbar');
+            if (penActive) {
+                canvas.classList.add('drawing-active');
+                btn.classList.add('active');
+                btn.innerHTML = "✏️ إيقاف القلم";
+                toolbar.style.display = "flex";
+            } else {
+                canvas.classList.remove('drawing-active');
+                btn.classList.remove('active');
+                btn.innerHTML = "✏️ قلم الشرح";
+                toolbar.style.display = "none";
+            }
+        }
+
+        function setPenColor(color, element) {
+            penColor = color;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('mouseleave', stopDraw);
+        canvas.addEventListener('touchstart', (e) => { startDraw(e); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchend', stopDraw);
+
+        function startDraw(e) {
+            if (!penActive) return;
+            isDrawing = true;
+            const pos = getPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function draw(e) {
+            if (!isDrawing || !penActive) return;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = penColor;
+            ctx.lineWidth = penSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function stopDraw() { isDrawing = false; }
+
+        function renderSlide() {
+            if (rawCardsData.length === 0) return;
+            if (currentIndex >= rawCardsData.length) currentIndex = rawCardsData.length - 1;
+            if (currentIndex < 0) currentIndex = 0;
+
+            const item = rawCardsData[currentIndex];
+            document.getElementById('slide-num').innerText = currentIndex + 1;
+            document.getElementById('q-number-tag').innerText = currentIndex + 1;
+            document.getElementById('total-slides').innerText = rawCardsData.length;
+            document.getElementById('questionText').innerText = item.q;
+
+            const ansText = item.options[item.correct];
+            const ansElem = document.getElementById('answerText');
+            ansElem.innerText = ansText;
+
+            if (isAnswerVisible) {
+                ansElem.classList.remove('hidden');
+                document.getElementById('btnToggleAns').innerText = "🙈 إخفاء الإجابة";
+            } else {
+                ansElem.classList.add('hidden');
+                document.getElementById('btnToggleAns').innerText = "👁️ إظهار الإجابة";
+            }
+
+            resizeCanvas();
+        }
+
+        function toggleAnswer() {
+            isAnswerVisible = !isAnswerVisible;
+            renderSlide();
+        }
+
+        function nextSlide() {
+            if (currentIndex < rawCardsData.length - 1) {
+                currentIndex++;
+                clearCanvas();
+                renderSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                clearCanvas();
+                renderSlide();
+            }
+        }
+
+        function deleteSlide() {
+            if (confirm("هل أنت متأكد من حذف هذه الشريحة؟")) {
+                rawCardsData.splice(currentIndex, 1);
+                clearCanvas();
+                if (currentIndex >= rawCardsData.length && currentIndex > 0) {
+                    currentIndex--;
+                }
+                renderSlide();
+            }
+        }
+
+        function openEditModal() {
+            const item = rawCardsData[currentIndex];
+            document.getElementById('editQText').value = item.q;
+            document.getElementById('editAnsText').value = item.options[item.correct];
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+
+        function saveEditedQuestion() {
+            const newQ = document.getElementById('editQText').value.trim();
+            const newAns = document.getElementById('editAnsText').value.trim();
+
+            if (!newQ || !newAns) {
+                alert("الرجاء إدخال نص السؤال والإجابة");
+                return;
+            }
+
+            rawCardsData[currentIndex].q = newQ;
+            rawCardsData[currentIndex].options[rawCardsData[currentIndex].correct] = newAns;
+            closeEditModal();
+            renderSlide();
+        }
+
+        function saveModifiedFile() {
+            var fullHtml = document.documentElement.outerHTML;
+            var blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "egypt_history_cards_100.html";
+            a.click();
+        }
+
+        async function copySlideImage() {
+            const btn = document.getElementById("btnCopyImg");
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ جاري النسخ...";
+            
+            const wasPenActive = penActive;
+            if (penActive) togglePen();
+            await document.fonts.ready;
+
+            try {
+                const canvasImg = await html2canvas(document.getElementById("quiz-app-wrapper"), { scale: 3, useCORS: true });
+                canvasImg.toBlob(async (blob) => {
+                    if (!blob) {
+                        alert("تعذر إنشاء الصورة لنسخها.");
+                        btn.innerText = originalText;
+                        if (wasPenActive) togglePen();
+                        return;
+                    }
+                    try {
+                        const item = new ClipboardItem({ "image/png": blob });
+                        await navigator.clipboard.write([item]);
+                        btn.innerText = "✅ تم النسخ!";
+                        setTimeout(() => { btn.innerText = originalText; }, 1800);
+                    } catch (err) {
+                        console.error("فشل النسخ عبر الحافظة:", err);
+                        alert("لم يسمح المتصفح بنسخ الصورة مباشرة، يرجى استخدام زر التصدير كصورة.");
+                        btn.innerText = originalText;
+                    }
+                    if (wasPenActive) togglePen();
+                }, "image/png");
+            } catch (error) {
+                console.error("خطأ أثناء تجهيز الصورة:", error);
+                alert("حدث خطأ أثناء نسخ الصورة.");
+                btn.innerText = originalText;
+                if (wasPenActive) togglePen();
+            }
+        }
+
+        async function exportSlideImage() {
+            const wasPenActive = penActive;
+            if (penActive) togglePen();
+            await document.fonts.ready;
+            html2canvas(document.getElementById("quiz-app-wrapper"), { scale: 3, useCORS: true }).then(canvasImg => {
+                const link = document.createElement("a");
+                link.download = `بطاقة_التاريخ_المصري_${currentIndex + 1}.png`;
+                link.href = canvasImg.toDataURL("image/png");
+                link.click();
+                if (wasPenActive) togglePen();
+            });
+        }
+
+        async function exportAllCardsImages() {
+            if (!confirm("هل تريد بالتأكيد تصدير جميع البطاقات كصور؟ قد تستغرق العملية بضع دقائق.")) return;
+            const wasPenActive = penActive;
+            if (penActive) togglePen();
+            const originalIndex = currentIndex;
+
+            for (let i = 0; i < rawCardsData.length; i++) {
+                currentIndex = i;
+                renderSlide();
+                await new Promise(resolve => setTimeout(resolve, 250));
+                await document.fonts.ready;
+
+                const canvasImg = await html2canvas(document.getElementById("quiz-app-wrapper"), { scale: 3, useCORS: true });
+                const link = document.createElement("a");
+                link.download = `egypt_history_card_${i + 1}.png`;
+                link.href = canvasImg.toDataURL("image/png");
+                link.click();
+                await new Promise(resolve => setTimeout(resolve, 150));
+            }
+
+            currentIndex = originalIndex;
+            renderSlide();
+            if (wasPenActive) togglePen();
+            alert("تم الانتهاء من تصدير جميع البطاقات بنجاح!");
+        }
+
+        function exportAllCardsPDF() {
+            const gridContainer = document.getElementById("printAllGrid");
+            gridContainer.innerHTML = "";
+
+            for (let i = 0; i < rawCardsData.length; i++) {
+                const item = rawCardsData[i];
+                const cardItem = document.createElement("div");
+                cardItem.className = "print-card-item";
+
+                let optionsHtml = '';
+                for (let j = 0; j < item.options.length; j++) {
+                    const letters = ['أ', 'ب', 'ج', 'د'];
+                    const isCorrect = (j === item.correct);
+                    const style = isCorrect ? 'color:#047857; font-weight:bold;' : 'color:#1e293b;';
+                    optionsHtml += `<div style="font-size:11px; ${style}">${letters[j]}) ${item.options[j]} ${isCorrect ? '✔' : ''}</div>`;
+                }
+
+                cardItem.innerHTML = `
+                    <div style="background:#005a9c; color:#fff; padding:4px 8px; font-size:11px; font-weight:bold; display:flex; justify-content:space-between; border-radius:4px 4px 0 0;">
+                        <span>التاريخ المصري الحديث والمعاصر</span>
+                        <span>(${i + 1} / ${rawCardsData.length})</span>
+                    </div>
+                    <div style="padding:8px; text-align:right; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                        <div style="font-size:12px; font-weight:900; color:#005a9c; line-height:1.3;">${i + 1}) ${item.q}</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin:4px 0;">
+                            ${optionsHtml}
+                        </div>
+                        <div style="border-top:1px dashed #005a9c; padding-top:3px; margin-top:2px;">
+                            <span style="font-size:9px; font-weight:bold; color:#047857;">الإجابة الصحيحة: ${item.options[item.correct]}</span>
+                        </div>
+                    </div>
+                    <div style="background:#004070; color:#fff; padding:3px 6px; font-size:8px; display:flex; justify-content:space-between; border-radius:0 0 4px 4px;">
+                        <span>إعداد: إبراهيم أبوزيد</span>
+                        <span>t.me/myibhistoricy</span>
+                    </div>
+                `;
+                gridContainer.appendChild(cardItem);
+            }
+
+            window.print();
+        }
+
+        function getFormattedShareText() {
+            const item = rawCardsData[currentIndex];
+            const letters = ['أ', 'ب', 'ج', 'د'];
+            let text = `تاريخ مصر الحديث والمعاصر\nhttps://t.me/myibhistoricy\n\n`;
+            text += `📚 *سؤال تاريخي محوري (${currentIndex + 1}/${rawCardsData.length})*:\n\n`;
+            text += `🔹 *${item.q}*\n\n`;
+            
+            for (let j = 0; j < item.options.length; j++) {
+                text += `${letters[j]}) ${item.options[j]}\n`;
+            }
+            
+            text += `\n✅ الإجابة الصحيحة: *${item.options[item.correct]}*\n\n`;
+            text += `✍️ إعداد: إبراهيم أبوزيد | معلّم ومدرب وباحث\n`;
+            text += `🌐 قناة التاريخ`;
+            return text;
+        }
+
+        function shareWhatsAppText() {
+            const text = getFormattedShareText();
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function shareTelegramText() {
+            const text = getFormattedShareText();
+            window.open(`https://t.me/share/url?url=${encodeURIComponent("https://t.me/myibhistoricy")}&text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        renderSlide();
+    </script>
+</body>
+</html>
